@@ -5,6 +5,13 @@
             <listEntry value="1">@Strings.MetricPower</listEntry>
         </settingConfig>
     </setting>
+    <setting propertyKey="@Properties.themeMode" title="@Strings.ThemeModeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.ThemeModeAuto</listEntry>
+            <listEntry value="1">@Strings.ThemeModeDark</listEntry>
+            <listEntry value="2">@Strings.ThemeModeLight</listEntry>
+        </settingConfig>
+    </setting>
     <setting propertyKey="@Properties.userFtp" title="@Strings.FtpTitle">
         <settingConfig type="numeric" min="50" max="600" />
     </setting>

@@ -1,6 +1,8 @@
 <properties>
     <!-- metricType: 0 = Heart Rate, 1 = Power -->
     <property id="metricType" type="number">0</property>
+    <!-- themeMode: 0 = Auto (Follow Device), 1 = Dark Mode, 2 = Light Mode -->
+    <property id="themeMode" type="number">0</property>
     <!-- userFtp: Functional Threshold Power in Watts -->
     <property id="userFtp" type="number">250</property>
     <!-- decimalZone: 0 = Continuous 3.4, 1 = Discrete Z3 -->

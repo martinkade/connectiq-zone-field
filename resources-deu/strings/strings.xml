@@ -3,6 +3,10 @@
     <string id="MetricTypeTitle">Messwert</string>
     <string id="MetricHeartRate">Herzfrequenz</string>
     <string id="MetricPower">Leistung (Power)</string>
+    <string id="ThemeModeTitle">Design / Farbmodus</string>
+    <string id="ThemeModeAuto">Automatisch (Geräteeinstellung)</string>
+    <string id="ThemeModeDark">Dunkler Modus (Dark Mode)</string>
+    <string id="ThemeModeLight">Heller Modus (Light Mode)</string>
     <string id="FtpTitle">Schwellenleistung / FTP (Watt)</string>
     <string id="DisplayFormatTitle">Zonen-Format</string>
     <string id="FormatDecimal">Kontinuierlich (z. B. 3.4)</string>

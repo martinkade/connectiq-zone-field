@@ -22,7 +22,11 @@ Egal ob nach Herzfrequenz oder Watt-Leistung trainiert wird: Zones visualisiert 
 * **2 Messwerte unterstützt:**
   * **Herzfrequenz (bpm):** 5-Zonen-Modell basierend auf sportartspezifischen Schwellenwerten und Maximalpuls direkt aus deinem Garmin Connect Profil.
   * **Radsport-Leistung (Watt):** Dr. Andrew Coggan 7-Zonen-Modell berechnet aus deiner Functional Threshold Power (FTP).
-* **Intuitive Farbcodierung:** Schnelle Orientierung auf einen Blick durch standardisierte Farben (Grau, Blau, Grün, Gelb, Orange, Rot, Lila).
+* **Intuitive Farbcodierung & Dynamische Zonenstapel:**
+  * **Edge Fahrradcomputer:** Vertikaler Zonenstapel auf der rechten Displayseite. Der aktive Zonenbalken expandiert automatisch in ein hervorgehobenes Banner mit direkter Zonenbeschriftung im Balken (ohne störende Kopfzeilen).
+  * **Garmin Sportuhren:** Speziell entwickelte, polare Kreisgeometrie mit einem geschwungenen $150^\circ$-Lünetten-Bogendiagramm (Tachymeter-Style), zentrierter Äquator-Großanzeige und an die Displayrundung angepassten Datenfeldern.
+* **Einheiten-Anzeige:** Zeigt `W` (Watt) oder `bpm` direkt an der Grundlinie der Hauptziffern in der Akzentfarbe der aktuellen Zone.
+* **Unterstützung für Dark Mode & Light Mode:** Folgt automatisch den Tag-/Nacht-Einstellungen deines Garmin-Geräts oder erzwingt Dark Mode / Light Mode dauerhaft über die Einstellungen.
 * **Kontinuierliche Dezimalzonen:** Präzise Anzeige des Fortschritts innerhalb der Zone (z. B. `3.4`) oder klassische diskrete Anzeige (`Z3`).
 * **Duale Zonenzeit-Erfassung:**
   * Zeigt sowohl die **kumulierte Gesamtzeit** in der aktuellen Zone als auch die kontinuierliche **Intervall-Dauer** in Klammern:
@@ -32,16 +36,17 @@ Egal ob nach Herzfrequenz oder Watt-Leistung trainiert wird: Zones visualisiert 
 * **Automatische Profil-Synchronisation:** Liest Maximalpulswerte und FTP-Schwellenwerte direkt aus Garmin Connect aus (manuelle Überschreibung in den Einstellungen jederzeit möglich).
 * **Optimiert für alle Displays:**
   * **Edge Fahrradcomputer:** Perfekt lesbar auf rechteckigen 1- bis 10-Felder-Seiten.
-  * **Garmin Sportuhren:** Automatische Berücksichtigung runder Displayränder (Fenix, Forerunner, Epix, Enduro, Venu) für optimale Lesbarkeit ohne Randabschnitt.
+  * **Garmin Sportuhren:** Maßgeschneiderte Kreis- und Quadranten-Layouts mit nativen Lünetten-Bögen ohne Textabschnitt.
 
 ---
 
 ### Einstellungen (Garmin Connect Mobile / Express)
 Passe das Datenfeld jederzeit über dein Smartphone an:
 1. **Messwert:** Herzfrequenz (Standard) oder Leistung (Power)
-2. **Eigene FTP:** Individuelle Schwellenleistung in Watt (50 – 600 W)
-3. **Zonen-Format:** Kontinuierlich (3.4) oder Diskret (Z3)
-4. **Farbdesign:** Akzent-Badge (akkuschonend) oder Vollflächig gefärbt
+2. **Design / Farbmodus:** Automatisch (Geräteeinstellung), Dark Mode oder Light Mode
+3. **Eigene FTP:** Individuelle Schwellenleistung in Watt (50 – 600 W)
+4. **Zonen-Format:** Kontinuierlich (3.4) oder Diskret (Z3)
+5. **Farbdesign:** Akzent-Badge (akkuschonend) oder Vollflächig gefärbt
 
 ---
 
@@ -51,14 +56,14 @@ Passe das Datenfeld jederzeit über dein Smartphone an:
 * **Z0 (Aufwärmen):** $< 50\%$ HFmax — Hellgrau
 * **Z1 (Aktive Erholung):** $50\% - 59\%$ HFmax — Dunkelgrau
 * **Z2 (Grundlagenausdauer 1):** $60\% - 69\%$ HFmax — Blau
-* **Z3 (Grundlagenausdauer 2 / Tempo):** $70\% - 79\%$ HFmax — Grün
+* **Z3 (Grundlagenausdauer 2 / Tempo):** $70\% - 79\%$ HFmax — Dunkelgrün (hoher Kontrast)
 * **Z4 (Schwellenbereich):** $80\% - 89\%$ HFmax — Orange
 * **Z5 (Maximale Belastung / VO2max):** $\ge 90\%$ HFmax — Rot
 
 #### Leistungszonen (Coggan 7-Zonen-Modell)
 * **Z1 (Aktive Erholung):** $< 55\%$ FTP — Hellgrau
 * **Z2 (Ausdauer):** $55\% - 75\%$ FTP — Blau
-* **Z3 (Tempo):** $76\% - 90\%$ FTP — Grün
+* **Z3 (Tempo):** $76\% - 90\%$ FTP — Dunkelgrün (hoher Kontrast)
 * **Z4 (Laktatschwelle):** $91\% - 105\%$ FTP — Gelb
 * **Z5 (VO2max):** $106\% - 120\%$ FTP — Orange
 * **Z6 (Anaerobe Kapazität):** $121\% - 150\%$ FTP — Rot

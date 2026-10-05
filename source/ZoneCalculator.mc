@@ -262,14 +262,22 @@ class ZoneCalculator {
         return res;
     }
 
-    private function getHrZoneColor(zone as Number) as Number {
+    public function getZoneColor(metricType as Number, zone as Number) as Number {
+        if (metricType == 1) {
+            return getPowerZoneColor(zone);
+        } else {
+            return getHrZoneColor(zone);
+        }
+    }
+
+    public function getHrZoneColor(zone as Number) as Number {
         switch (zone) {
             case 1:
                 return Graphics.COLOR_DK_GRAY;
             case 2:
                 return Graphics.COLOR_BLUE;
             case 3:
-                return Graphics.COLOR_GREEN;
+                return Graphics.COLOR_DK_GREEN;
             case 4:
                 return Graphics.COLOR_ORANGE;
             case 5:
@@ -279,14 +287,14 @@ class ZoneCalculator {
         }
     }
 
-    private function getPowerZoneColor(zone as Number) as Number {
+    public function getPowerZoneColor(zone as Number) as Number {
         switch (zone) {
             case 1:
                 return Graphics.COLOR_LT_GRAY;
             case 2:
                 return Graphics.COLOR_BLUE;
             case 3:
-                return Graphics.COLOR_GREEN;
+                return Graphics.COLOR_DK_GREEN;
             case 4:
                 return Graphics.COLOR_YELLOW;
             case 5:

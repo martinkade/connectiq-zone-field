@@ -11,10 +11,18 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 * **Supported Metrics:**
   * **Heart Rate (Default):** Standard 5-Zone model utilizing sport-specific thresholds and Max HR directly from your Garmin Connect user profile.
   * **Power (Cycling):** Dr. Andrew Coggan 7-Zone model calculated from your Functional Threshold Power (FTP).
-* **Color-Coded Zone Indicator:**
-  * **Continuous Zone Format:** Displays fractional progress through the zone (e.g., `3.4`).
-  * **Discrete Zone Format:** Displays classic integer badges (e.g., `Z3`).
-  * **Flexible Color Themes:** Choose between clean **Accent Badge** pills with bottom status bar, or bold **Full Background Fill** for high visibility.
+* **Color-Coded Zone Indicator & Dynamic Stacks:**
+  * **Rectangular Displays (Edge Series):** Vertical stack of horizontal zone bars on the right side. The active zone bar dynamically expands into a prominent highlighted banner displaying the zone label directly inside it (with no redundant top headers), while inactive zones remain slim colored reference bars.
+  * **Circular Watch Displays (Fenix, Forerunner, Epix):** Completely separate, native circular layout architecture:
+    * **Full Circular Screen (1-Field):** Features a sweeping $150^\circ$ radial tachymeter bezel arc gauge along the upper watch curvature with thick active zone highlighting, centered equatorial primary digits with baseline unit, and curved top/bottom status pods.
+    * **Watch Half-Screen (Top/Bottom):** Adapts to dome-top or bowl-bottom curved bezels with bezel arcs and flat-boundary-weighted typography.
+    * **Watch Middle Slice:** Features a horizontal segmented zone gauge bar with active zone expansion.
+  * **Continuous Zone Format:** Displays fractional progress through the zone (e.g., `3.4` or `Z3.4`).
+  * **Discrete Zone Format:** Displays classic integer badges (e.g., `Z3`, `Z7`).
+  * **Unit Indicator:** Shows `W` (Watts) or `bpm` next to the primary digits at the baseline, dynamically tinted in the active zone's accent.
+  * **Dark Mode & Light Mode Support:** Automatic detection based on device profile, or force Dark Mode / Light Mode via app settings.
+  * **Flexible Color Themes:** Choose between clean **Accent Badge** with vertical stack and bottom status bar, or bold **Full Background Fill** for high visibility.
+  * **Optimized High-Contrast Palette:** Zone 3 uses a deep dark green background with crisp white typography for maximum sunlight legibility.
 * **Dual In-Zone Timer:**
   * Displays both **cumulative time** spent in the current active zone across the entire workout and continuous **interval time** spent in the zone since last transition:
     $$\mathbf{14:22\ (1:45)} \quad \text{— [Cumulative Session Time] ([Interval Time])}$$
@@ -22,8 +30,8 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 * **Session Average:**
   * Always displays current session average (`AVG 148` bpm or `AVG 245` W).
 * **Cross-Device Responsive Design:**
-  * **Edge Bike Computers:** Maximizes wide rectangular screen real estate across 1, 2, 4, 8, and 10-field layouts.
-  * **Wearable Watches:** Automatically reads `getObscurityFlags()` to adapt padding and fonts to curved watch bezels (Fenix, Forerunner, Epix, Enduro, Venu).
+  * **Edge Bike Computers:** Optimized rectangular 1, 2, 4, 8, and 10-field grids.
+  * **Wearable Watches:** Dedicated polar circular and quadrant layouts using native bezel arcs without text clipping.
 * **Full Localization:**
   * English (`en` / `eng`)
   * German (`de` / `deu`)
@@ -49,7 +57,7 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 | **Z0** | Warm-Up / Below Zone 1 | $< 50\%$ | Light Gray |
 | **Z1** | Warm Up / Active Recovery | $50\% - 59\%$ | Dark Gray |
 | **Z2** | Easy / Aerobic Base | $60\% - 69\%$ | Blue |
-| **Z3** | Aerobic / Tempo | $70\% - 79\%$ | Green |
+| **Z3** | Aerobic / Tempo | $70\% - 79\%$ | Dark Green (High Contrast) |
 | **Z4** | Threshold | $80\% - 89\%$ | Orange |
 | **Z5** | Maximum / VO2 Max | $\ge 90\%$ | Red |
 
@@ -60,7 +68,7 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 | :---: | :--- | :---: | :--- |
 | **Z1** | Active Recovery | $< 55\%$ | Light Gray |
 | **Z2** | Endurance | $55\% - 75\%$ | Blue |
-| **Z3** | Tempo | $76\% - 90\%$ | Green |
+| **Z3** | Tempo | $76\% - 90\%$ | Dark Green (High Contrast) |
 | **Z4** | Lactate Threshold | $91\% - 105\%$ | Yellow |
 | **Z5** | VO2 Max | $106\% - 120\%$ | Orange |
 | **Z6** | Anaerobic Capacity | $121\% - 150\%$ | Red |
@@ -75,6 +83,7 @@ All settings can be adjusted in the Garmin Connect Mobile app or Garmin Express 
 | Setting Key | Options / Range | Default | Description |
 | :--- | :--- | :---: | :--- |
 | **Metric** | `Heart Rate` (0) / `Power` (1) | Heart Rate | Primary metric tracked |
+| **Theme Mode** | `Auto (Follow Device)` (0) / `Dark Mode` (1) / `Light Mode` (2) | Auto | Dark Mode vs Light Mode appearance |
 | **FTP (Watts)** | `50` – `600` Watts | 250 W | Functional Threshold Power |
 | **Zone Format** | `Continuous (e.g. 3.4)` / `Discrete (e.g. Z3)` | Continuous | Numeric format for zone value |
 | **Color Style** | `Accent Badge` / `Full Background Fill` | Accent Badge | Full screen coloring vs. accent pill |
