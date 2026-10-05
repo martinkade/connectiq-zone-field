@@ -1,0 +1,6 @@
+bin/
+*.prg
+*.iq
+.history/
+.vscode/
+developer_key.der

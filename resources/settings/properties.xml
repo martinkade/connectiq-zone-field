@@ -1,0 +1,10 @@
+<properties>
+    <!-- metricType: 0 = Heart Rate, 1 = Power -->
+    <property id="metricType" type="number">0</property>
+    <!-- userFtp: Functional Threshold Power in Watts -->
+    <property id="userFtp" type="number">250</property>
+    <!-- decimalZone: 0 = Continuous 3.4, 1 = Discrete Z3 -->
+    <property id="decimalZone" type="number">0</property>
+    <!-- fullBackgroundColor: 0 = Accent Badge, 1 = Full Background Fill -->
+    <property id="fullBackgroundColor" type="number">0</property>
+</properties>

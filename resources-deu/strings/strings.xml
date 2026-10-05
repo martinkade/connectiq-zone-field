@@ -1,0 +1,18 @@
+<strings>
+    <string id="AppName">ZoneField</string>
+    <string id="MetricTypeTitle">Messwert</string>
+    <string id="MetricHeartRate">Herzfrequenz</string>
+    <string id="MetricPower">Leistung (Power)</string>
+    <string id="FtpTitle">Schwellenleistung / FTP (Watt)</string>
+    <string id="DisplayFormatTitle">Zonen-Format</string>
+    <string id="FormatDecimal">Kontinuierlich (z. B. 3.4)</string>
+    <string id="FormatInteger">Diskret (z. B. Z3)</string>
+    <string id="ColorThemeTitle">Farbdesign</string>
+    <string id="ColorThemeAccent">Akzent-Badge</string>
+    <string id="ColorThemeFull">Vollflächig gefärbt</string>
+    <string id="LabelAvg">DURCHSCHN.</string>
+    <string id="LabelInZone">ZEIT IN ZONE</string>
+    <string id="LabelZone">ZONE</string>
+    <string id="LabelHr">HF</string>
+    <string id="LabelPwr">LEIST.</string>
+</strings>
