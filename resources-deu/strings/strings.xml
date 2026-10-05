@@ -1,5 +1,5 @@
 <strings>
-    <string id="AppName">ZoneField</string>
+    <string id="AppName">Zones</string>
     <string id="MetricTypeTitle">Messwert</string>
     <string id="MetricHeartRate">Herzfrequenz</string>
     <string id="MetricPower">Leistung (Power)</string>

@@ -1,4 +1,4 @@
-# ZoneField — Garmin Connect IQ Data Field
+# Zones — Garmin Connect IQ Data Field
 
 A high-performance Garmin Connect IQ Data Field that provides instant, glanceable training zone feedback with color-coded badges, continuous or discrete zone values, dual active-zone timers, and session averages for both **Heart Rate** and **Power**.
 
@@ -27,6 +27,15 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 * **Full Localization:**
   * English (`en` / `eng`)
   * German (`de` / `deu`)
+
+---
+
+## Device Screenshots
+
+| Garmin Edge 1040 (Cycling Power) | Garmin Forerunner 970 (Running HR) | Garmin Fenix 8 (Full BG Theme) |
+| :---: | :---: | :---: |
+| ![Edge 1040](assets/screenshots/screenshot_edge1040_power.jpg) | ![Forerunner 970](assets/screenshots/screenshot_forerunner970_hr.jpg) | ![Fenix 8](assets/screenshots/screenshot_fenix8_fullbg.jpg) |
+| *Widescreen Edge layout with Coggan Z4 Power* | *Round AMOLED layout with Z3 Aerobic HR* | *High-visibility full background fill mode* |
 
 ---
 
@@ -79,6 +88,13 @@ ZoneField/
 ├── .vscode/
 │   ├── launch.json              # 1-click debugging configurations (Edge, Forerunner, Fenix)
 │   └── settings.json            # Connect IQ developer key configuration
+├── assets/                      # Store graphics & device screenshots
+│   ├── cover.png                # 500x500 Connect IQ Store App Icon
+│   ├── hero.png                 # 1440x720 Connect IQ Store Hero Banner
+│   └── screenshots/             # High-resolution device screenshots (<150KB JPEG)
+│       ├── screenshot_edge1040_power.jpg
+│       ├── screenshot_forerunner970_hr.jpg
+│       └── screenshot_fenix8_fullbg.jpg
 ├── bin/                         # Compiled binaries (.prg) and store bundles (.iq)
 ├── resources/                   # Base resources & default strings (English)
 │   ├── drawables/               # 40x40 base launcher icon
