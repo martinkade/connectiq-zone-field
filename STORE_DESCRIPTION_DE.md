@@ -8,31 +8,36 @@
 ---
 
 ## Kurzbeschreibung / Untertitel (Store-Kachel)
-> Farbcodierte Trainingszonen für Herzfrequenz und Leistung mit kontinuierlichen Dezimalzonen, Einheiten-Durchschnitt und dualer Zonenzeit-Erfassung.
+> Intuitive Trainingszonen mit horizontalem Stapelbalkendiagramm (% Zeit in Zone), Live-Zonenindikator und Großanzeige mit Zonen-Badge.
 
 ---
 
 ## Ausführliche Beschreibung
 
-Zones ist ein All-in-One Garmin Connect IQ Datenfeld für Läufer und Radsportler, die während des Trainings sofortige und intuitive Orientierung über ihre aktuellen Belastungszonen benötigen.
+Zones ist ein komplett neu gestaltetes Garmin Connect IQ Datenfeld für Läufer und Radsportler, die während des Trainings sofortige und intuitive Orientierung über ihre aktuellen Belastungszonen benötigen.
 
-Egal ob nach Herzfrequenz oder Watt-Leistung trainiert wird: Zones visualisiert deine Trainingszone farbcodiert, als kontinuierlichen Dezimalwert, mit deinem aktuellen Einheiten-Durchschnitt und einer innovativen dualen Zonenzeit-Erfassung.
+Egal ob nach Herzfrequenz oder Watt-Leistung trainiert wird: Zones visualisiert deine Trainingszone mit einem am unteren Rand fixierten horizontalen Stapelbalken (der den Zeitanteil pro Zone widerspiegelt), einem dynamischen Zonenpositions-Indikator und einem dominanten Messwert mit farbigem Zonen-Badge.
 
 ### Hauptmerkmale
 * **2 Messwerte unterstützt:**
   * **Herzfrequenz (bpm):** 5-Zonen-Modell basierend auf sportartspezifischen Schwellenwerten und Maximalpuls direkt aus deinem Garmin Connect Profil.
   * **Radsport-Leistung (Watt):** Dr. Andrew Coggan 7-Zonen-Modell berechnet aus deiner Functional Threshold Power (FTP).
-* **Intuitive Farbcodierung & Dynamische Zonenstapel:**
-  * **Edge Fahrradcomputer:** Vertikaler Zonenstapel auf der rechten Displayseite. Der aktive Zonenbalken expandiert automatisch in ein hervorgehobenes Banner mit direkter Zonenbeschriftung im Balken (ohne störende Kopfzeilen).
-  * **Garmin Sportuhren:** Speziell entwickelte, polare Kreisgeometrie mit einem geschwungenen $150^\circ$-Lünetten-Bogendiagramm (Tachymeter-Style), zentrierter Äquator-Großanzeige und an die Displayrundung angepassten Datenfeldern.
-* **Einheiten-Anzeige:** Zeigt `W` (Watt) oder `bpm` direkt an der Grundlinie der Hauptziffern in der Akzentfarbe der aktuellen Zone.
+* **Horizontales Stapelbalkendiagramm am unteren Bildschirmrand (Zeit in Zone):**
+  * Segmente spiegeln den prozentualen Zeitanteil pro Zone wider (5 für Herzfrequenz, 7 für Leistung).
+  * Sitzt bündig am unteren Rand des Datenfelds.
+  * Das aktive Zonensegment ist für optimale Erkennbarkeit leicht nach oben erhöht.
+  * Ausgewogene Startverteilung bei Trainingsbeginn und automatische Mindestbreite beim erstmaligen Betreten einer neuen Zone.
+* **Echtzeit-Positionsindikator in der aktiven Zone:**
+  * Direkt über dem erhöhten Segment zeigt ein nach unten weisender Dreiecks-Indikator (`▼`) präzise an, wo sich der aktuelle Wert zwischen der unteren und oberen Zonengrenze befindet.
+* **Dominanter Hauptmesswert & Inline-Zonen-Badge:**
+  * Große, fette Ziffern ohne störende Einheitenbeschriftung für blitzschnelle Ablesbarkeit.
+  * Direkt rechts daneben zeigt ein großes farbcodiertes Badge die aktive Zone (z. B. `Z2`, `Z4`) mit automatischer Kontrastschrift.
+* **Dynamische Layout-Anpassung für Sportuhren & Fahrradcomputer:**
+  * **Edge Fahrradcomputer & Mittlere Felder:** Unten fixierter Stapelbalken mit erhöhtem aktivem Segment, Positionsindikator und zentrierter Großanzeige mit Badge darüber.
+  * **Sportuhren Obere Bildschirmhälfte:** Als Bogen an die obere Displayrundung gehefteter Stapelbalken mit radial dickerem aktivem Segment, Indikator und Großanzeige darunter.
+  * **Sportuhren Untere Bildschirmhälfte:** Als Bogen an die untere Rundung gehefteter Stapelbalken mit erhöhtem aktivem Segment, Indikator und Großanzeige darüber.
+  * **Sportuhren Vollbild (1 Feld):** Unten gehefteter Lünettenbogen mit Indikator und zentrierter Großanzeige mit Badge.
 * **Unterstützung für Dark Mode & Light Mode:** Folgt automatisch den Tag-/Nacht-Einstellungen deines Garmin-Geräts oder erzwingt Dark Mode / Light Mode dauerhaft über die Einstellungen.
-* **Kontinuierliche Dezimalzonen:** Präzise Anzeige des Fortschritts innerhalb der Zone (z. B. `3.4`) oder klassische diskrete Anzeige (`Z3`).
-* **Duale Zonenzeit-Erfassung:**
-  * Zeigt sowohl die **kumulierte Gesamtzeit** in der aktuellen Zone als auch die kontinuierliche **Intervall-Dauer** in Klammern:
-    $$\mathbf{14:22\ (1:45)} \quad \text{— [Gesamtzeit in Zone] ([Intervall-Dauer])}$$
-  * Die Intervallzeit setzt sich bei jedem Zonenwechsel automatisch auf `0:00` zurück, während die Gesamtzeit der Zone sessionweit weitergezählt wird.
-* **Einheiten-Durchschnitt:** Ständige Kontrolle über die durchschnittliche Herzfrequenz bzw. Durchschnittsleistung.
 * **Automatische Profil-Synchronisation:** Liest Maximalpulswerte und FTP-Schwellenwerte direkt aus Garmin Connect aus (manuelle Überschreibung in den Einstellungen jederzeit möglich).
 * **Optimiert für alle Displays:**
   * **Edge Fahrradcomputer:** Perfekt lesbar auf rechteckigen 1- bis 10-Felder-Seiten.
@@ -45,8 +50,7 @@ Passe das Datenfeld jederzeit über dein Smartphone an:
 1. **Messwert:** Herzfrequenz (Standard) oder Leistung (Power)
 2. **Design / Farbmodus:** Automatisch (Geräteeinstellung), Dark Mode oder Light Mode
 3. **Eigene FTP:** Individuelle Schwellenleistung in Watt (50 – 600 W)
-4. **Zonen-Format:** Kontinuierlich (3.4) oder Diskret (Z3)
-5. **Farbdesign:** Akzent-Badge (akkuschonend) oder Vollflächig gefärbt
+4. **Farbdesign:** Akzent-Badge (akkuschonend) oder Vollflächig gefärbt
 
 ---
 
@@ -81,6 +85,6 @@ Passe das Datenfeld jederzeit über dein Smartphone an:
 ### Checkliste für den Store-Upload
 * **App-Icon (500x500):** `assets/cover.png`
 * **Hero-Banner (1440x720):** `assets/hero.png`
-* **Geräte-Screenshot 1 (Edge):** `assets/screenshots/screenshot_edge1040_power.jpg` (Radsport-Leistung, Z4 Schwelle, <150 KB JPEG)
-* **Geräte-Screenshot 2 (Forerunner):** `assets/screenshots/screenshot_forerunner970_hr.jpg` (Lauf-HF, Z3 Grundlagenbereich, <150 KB JPEG)
-* **Geräte-Screenshot 3 (Fenix):** `assets/screenshots/screenshot_fenix8_fullbg.jpg` (Vollfarb-Theme, Z5 Maximalbereich, <150 KB JPEG)
+* **Geräte-Screenshot 1 (Edge):** `assets/screenshots/screenshot_edge1040_power.jpg` (Edge 1040: Radsport-Leistung 285 W, Z4-Badge, erhöhtes gelbes Segment & Dreiecks-Indikator, <150 KB JPEG)
+* **Geräte-Screenshot 2 (Forerunner):** `assets/screenshots/screenshot_forerunner970_hr.jpg` (Forerunner 970: Lauf-Puls 156 bpm, Z3-Badge, unten fixierter Bogen-Stapelbalken & Indikator, <150 KB JPEG)
+* **Geräte-Screenshot 3 (Fenix):** `assets/screenshots/screenshot_fenix8_fullbg.jpg` (Fenix 8: Obere Displayhälfte mit oben fixiertem Bogen-Stapelbalken, Z5-Maximalbereich & Großanzeige darunter, <150 KB JPEG)

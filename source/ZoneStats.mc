@@ -179,4 +179,97 @@ class ZoneStats {
             ]);
         }
     }
+
+    // Computes pixel (or angular) widths for each active training zone (Zone 1..mNumZones).
+    // - Proportional to time spent in each zone.
+    // - Guarantees minimum width for the active zone so the elevated segment and indicator are visible.
+    // - Falls back to equal distribution if no time is tracked yet (totalSec == 0).
+    // - Ensures the sum of segment widths strictly equals availWidth.
+    public function computeSegmentWidths(availWidth as Number, activeZone as Number, minActiveW as Number) as Array<Number> {
+        var widths = new Array<Number>[mNumZones];
+        if (availWidth <= 0) {
+            for (var i = 0; i < mNumZones; i++) {
+                widths[i] = 0;
+            }
+            return widths;
+        }
+
+        var totalSec = getTotalTrackedSeconds(false); // Excludes Zone 0
+
+        // 1. Initial State: If total tracked time is 0, distribute equally
+        if (totalSec <= 0) {
+            var baseW = availWidth / mNumZones;
+            var acc = 0;
+            for (var i = 0; i < mNumZones; i++) {
+                widths[i] = baseW;
+                acc += baseW;
+            }
+            widths[mNumZones - 1] += (availWidth - acc);
+            return widths;
+        }
+
+        // 2. Proportional Distribution with Active Zone Protection
+        var isActValid = (activeZone >= 1 && activeZone <= mNumZones);
+        var actSec = isActValid ? getCumulativeSeconds(activeZone) : 0;
+        var actProportionalW = (totalSec > 0) ? ((actSec.toFloat() / totalSec.toFloat()) * availWidth).toNumber() : 0;
+
+        // Cap minActiveW so it never exceeds half the total available width
+        var maxCap = availWidth / 2;
+        if (minActiveW > maxCap) {
+            minActiveW = maxCap;
+        }
+
+        if (isActValid && actProportionalW < minActiveW) {
+            // Guarantee minimum width for active zone
+            var remWidth = availWidth - minActiveW;
+            var remSec = totalSec - actSec;
+            var acc = 0;
+
+            for (var i = 0; i < mNumZones; i++) {
+                var zNum = i + 1;
+                if (zNum == activeZone) {
+                    widths[i] = minActiveW;
+                    acc += minActiveW;
+                } else if (remSec > 0) {
+                    var sec = getCumulativeSeconds(zNum);
+                    var w = ((sec.toFloat() / remSec.toFloat()) * remWidth).toNumber();
+                    widths[i] = w;
+                    acc += w;
+                } else {
+                    var w = remWidth / (mNumZones - 1);
+                    widths[i] = w;
+                    acc += w;
+                }
+            }
+
+            // Adjust integer remainder onto largest non-active segment
+            var diff = availWidth - acc;
+            if (diff != 0) {
+                var maxIdx = (activeZone == 1) ? 1 : 0;
+                for (var i = 0; i < mNumZones; i++) {
+                    if ((i + 1) != activeZone && widths[i] > widths[maxIdx]) {
+                        maxIdx = i;
+                    }
+                }
+                widths[maxIdx] += diff;
+            }
+        } else {
+            // Strictly proportional distribution
+            var acc = 0;
+            var maxIdx = 0;
+            for (var i = 0; i < mNumZones; i++) {
+                var zNum = i + 1;
+                var sec = getCumulativeSeconds(zNum);
+                var w = ((sec.toFloat() / totalSec.toFloat()) * availWidth).toNumber();
+                widths[i] = w;
+                acc += w;
+                if (w > widths[maxIdx]) {
+                    maxIdx = i;
+                }
+            }
+            widths[maxIdx] += (availWidth - acc);
+        }
+
+        return widths;
+    }
 }

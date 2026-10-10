@@ -1,8 +1,8 @@
 # Zones — Garmin Connect IQ Data Field
 
-A high-performance Garmin Connect IQ Data Field that provides instant, glanceable training zone feedback with color-coded badges, continuous or discrete zone values, dual active-zone timers, and session averages for both **Heart Rate** and **Power**.
+A high-performance Garmin Connect IQ Data Field that provides instant, glanceable training zone feedback with a bottom-docked horizontal stacked bar chart showing time spent in zones, a real-time within-zone position indicator, and a prominent hero value with inline color-coded zone badge for both **Heart Rate** and **Power**.
 
-Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular grids) and **Garmin wearable watches** (round AMOLED/MIP screens with curved bezel awareness).
+Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular grids) and **Garmin wearable watches** (round AMOLED/MIP screens with bezel-curved arc adaptations).
 
 ---
 
@@ -11,27 +11,27 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 * **Supported Metrics:**
   * **Heart Rate (Default):** Standard 5-Zone model utilizing sport-specific thresholds and Max HR directly from your Garmin Connect user profile.
   * **Power (Cycling):** Dr. Andrew Coggan 7-Zone model calculated from your Functional Threshold Power (FTP).
-* **Color-Coded Zone Indicator & Dynamic Stacks:**
-  * **Rectangular Displays (Edge Series):** Vertical stack of horizontal zone bars on the right side. The active zone bar dynamically expands into a prominent highlighted banner displaying the zone label directly inside it (with no redundant top headers), while inactive zones remain slim colored reference bars.
-  * **Circular Watch Displays (Fenix, Forerunner, Epix):** Completely separate, native circular layout architecture:
-    * **Full Circular Screen (1-Field):** Features a sweeping $150^\circ$ radial tachymeter bezel arc gauge along the upper watch curvature with thick active zone highlighting, centered equatorial primary digits with baseline unit, and curved top/bottom status pods.
-    * **Watch Half-Screen (Top/Bottom):** Adapts to dome-top or bowl-bottom curved bezels with bezel arcs and flat-boundary-weighted typography.
-    * **Watch Middle Slice:** Features a horizontal segmented zone gauge bar with active zone expansion.
-  * **Continuous Zone Format:** Displays fractional progress through the zone (e.g., `3.4` or `Z3.4`).
-  * **Discrete Zone Format:** Displays classic integer badges (e.g., `Z3`, `Z7`).
-  * **Unit Indicator:** Shows `W` (Watts) or `bpm` next to the primary digits at the baseline, dynamically tinted in the active zone's accent.
-  * **Dark Mode & Light Mode Support:** Automatic detection based on device profile, or force Dark Mode / Light Mode via app settings.
-  * **Flexible Color Themes:** Choose between clean **Accent Badge** with vertical stack and bottom status bar, or bold **Full Background Fill** for high visibility.
-  * **Optimized High-Contrast Palette:** Zone 3 uses a deep dark green background with crisp white typography for maximum sunlight legibility.
-* **Dual In-Zone Timer:**
-  * Displays both **cumulative time** spent in the current active zone across the entire workout and continuous **interval time** spent in the zone since last transition:
-    $$\mathbf{14:22\ (1:45)} \quad \text{— [Cumulative Session Time] ([Interval Time])}$$
-  * Automatically freezes when the workout timer is paused and resets the interval timer upon transitioning to another zone.
-* **Session Average:**
-  * Always displays current session average (`AVG 148` bpm or `AVG 245` W).
+* **Bottom Horizontal Stacked Bar Chart (Time-in-Zone):**
+  * **Proportional Segments:** Segments reflect percentage of total session time spent in each zone (5 for Heart Rate, 7 for Power).
+  * **Elevated Active Segment:** The active training zone segment is raised slightly higher than inactive segments while remaining flush to the bottom.
+  * **Initial & Zero-Time Protection:** Starts with balanced baseline widths and guarantees a minimum visible width whenever entering a zone for the first time.
+* **Real-Time Within-Zone Position Indicator:**
+  * Directly above the elevated active segment, a dynamic downward-pointing caret indicator (`▼`) pinpoints exactly where the current measured value sits between the active zone's lower and upper boundaries.
+* **Hero Value & Inline Active Zone Badge:**
+  * Displays the live measured value in large, bold digits without distracting unit labels.
+  * Inline to the right of the value, a large rounded badge clearly highlights the active zone (e.g. `Z2` or `Z4`) with vibrant zone color fill and automatic high-contrast typography.
+* **Dynamic Form Factor Adaptation for Wearables:**
+  * **Rectangular Displays (Edge Series):** Bottom-docked horizontal stacked bar, elevated active segment, indicator, and centered hero value + inline badge.
+  * **Circular Watch Displays (Fenix, Forerunner, Epix):**
+    * **Top Half Screen (`OBSCURE_TOP`):** Stacked bar pinned to the top bezel curve as an arc with radially thicker active segment, indicator caret, and hero value + badge below.
+    * **Bottom Half Screen (`OBSCURE_BOTTOM`):** Stacked bar pinned along the bottom bezel curve with elevated active segment, indicator above, and hero value + badge above.
+    * **Full Circular Screen (1-Field):** Pinned bottom bezel arc with indicator and centered hero value + inline badge.
+    * **Middle Band:** Bottom-docked horizontal stacked bar with indicator and hero value + badge above.
+* **Dark Mode & Light Mode Support:**
+  * Automatic detection based on device profile, or force Dark Mode / Light Mode via app settings.
 * **Cross-Device Responsive Design:**
   * **Edge Bike Computers:** Optimized rectangular 1, 2, 4, 8, and 10-field grids.
-  * **Wearable Watches:** Dedicated polar circular and quadrant layouts using native bezel arcs without text clipping.
+  * **Wearable Watches:** Dedicated polar circular and quadrant layouts without text clipping.
 * **Full Localization:**
   * English (`en` / `eng`)
   * German (`de` / `deu`)
@@ -40,10 +40,10 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 
 ## Device Screenshots
 
-| Garmin Edge 1040 (Cycling Power) | Garmin Forerunner 970 (Running HR) | Garmin Fenix 8 (Full BG Theme) |
+| Garmin Edge 1040 (Cycling Power) | Garmin Forerunner 970 (Running HR) | Garmin Fenix 8 (Top Half Split) |
 | :---: | :---: | :---: |
 | ![Edge 1040](assets/screenshots/screenshot_edge1040_power.jpg) | ![Forerunner 970](assets/screenshots/screenshot_forerunner970_hr.jpg) | ![Fenix 8](assets/screenshots/screenshot_fenix8_fullbg.jpg) |
-| *Widescreen Edge layout with Coggan Z4 Power* | *Round AMOLED layout with Z3 Aerobic HR* | *High-visibility full background fill mode* |
+| *Edge 1040 with Coggan Z4 Power, elevated yellow segment & caret indicator* | *Forerunner 970 with Z3 HR, bottom arc stacked bar & indicator* | *Fenix 8 with pinned top arc stacked bar & hero value below* |
 
 ---
 
@@ -85,7 +85,6 @@ All settings can be adjusted in the Garmin Connect Mobile app or Garmin Express 
 | **Metric** | `Heart Rate` (0) / `Power` (1) | Heart Rate | Primary metric tracked |
 | **Theme Mode** | `Auto (Follow Device)` (0) / `Dark Mode` (1) / `Light Mode` (2) | Auto | Dark Mode vs Light Mode appearance |
 | **FTP (Watts)** | `50` – `600` Watts | 250 W | Functional Threshold Power |
-| **Zone Format** | `Continuous (e.g. 3.4)` / `Discrete (e.g. Z3)` | Continuous | Numeric format for zone value |
 | **Color Style** | `Accent Badge` / `Full Background Fill` | Accent Badge | Full screen coloring vs. accent pill |
 
 ---
@@ -169,7 +168,7 @@ Build and run directly from the command line:
 
 ### Feeding Sensor Data in the Simulator
 1. **Start Activity Timer:** Press the device's physical `START / STOP` button or press **`F7`** in the simulator to activate time accumulation.
-2. **Simulate Sensors:** Open **Simulation $\rightarrow$ Activity Data...** and drag the **Heart Rate** or **Power** sliders to watch zone colors, decimal badges, and interval counters react in real time.
+2. **Simulate Sensors:** Open **Simulation $\rightarrow$ Activity Data...** and drag the **Heart Rate** or **Power** sliders to watch zone colors, inline zone badges, indicator caret, and stacked bar segments react in real time.
 3. **Test App Settings:** Open **File $\rightarrow$ Edit Persistent Storage $\rightarrow$ Edit Application Properties Data** to toggle between Heart Rate and Power mode or change FTP.
 
 ---

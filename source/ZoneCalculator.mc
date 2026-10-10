@@ -8,6 +8,9 @@ import Toybox.System;
 class ZoneResult {
     public var zoneIndex as Number = 0;
     public var decimalZone as Float = 0.0f;
+    public var zoneProgress as Float = 0.0f; // 0.0 to 1.0 progress within active zone
+    public var minBound as Number = 0;
+    public var maxBound as Number = 0;
     public var color as Number = Graphics.COLOR_LT_GRAY;
     public var label as String = "Z0";
 
@@ -150,6 +153,7 @@ class ZoneCalculator {
             res.label = "--";
             res.zoneIndex = 0;
             res.decimalZone = 0.0f;
+            res.zoneProgress = 0.0f;
             res.color = Graphics.COLOR_LT_GRAY;
             return res;
         }
@@ -163,6 +167,9 @@ class ZoneCalculator {
             // Below Zone 1 (Warmup / Zone 0)
             res.zoneIndex = 0;
             res.decimalZone = (minZ1 > 0) ? (hr.toFloat() / minZ1.toFloat()) : 0.0f;
+            res.zoneProgress = 0.0f;
+            res.minBound = 0;
+            res.maxBound = minZ1;
             res.color = Graphics.COLOR_LT_GRAY;
             res.label = "Z0";
             return res;
@@ -172,6 +179,9 @@ class ZoneCalculator {
             // Max or above Zone 5
             res.zoneIndex = 5;
             res.decimalZone = 5.99f;
+            res.zoneProgress = 1.0f;
+            res.minBound = (count >= 2) ? zones[count - 2] : 0;
+            res.maxBound = maxHr;
             res.color = Graphics.COLOR_RED;
             res.label = "Z5";
             return res;
@@ -191,8 +201,13 @@ class ZoneCalculator {
                 var zIndex = i; // 1 to 5
                 var span = high - low;
                 var frac = (span > 0) ? ((hr - low).toFloat() / span.toFloat()) : 0.0f;
+                if (frac < 0.0f) { frac = 0.0f; }
+                if (frac > 1.0f) { frac = 1.0f; }
                 res.zoneIndex = zIndex;
                 res.decimalZone = zIndex.toFloat() + frac;
+                res.zoneProgress = frac;
+                res.minBound = low;
+                res.maxBound = high;
                 res.label = "Z" + zIndex;
                 res.color = getHrZoneColor(zIndex);
                 return res;
@@ -201,6 +216,7 @@ class ZoneCalculator {
 
         res.zoneIndex = 5;
         res.decimalZone = 5.0f;
+        res.zoneProgress = 1.0f;
         res.label = "Z5";
         res.color = Graphics.COLOR_RED;
         return res;
@@ -212,6 +228,7 @@ class ZoneCalculator {
             res.label = "--";
             res.zoneIndex = 0;
             res.decimalZone = 0.0f;
+            res.zoneProgress = 0.0f;
             res.color = Graphics.COLOR_LT_GRAY;
             return res;
         }
@@ -232,8 +249,13 @@ class ZoneCalculator {
             // Zone 1
             var span = zones[1] - zones[0];
             var frac = (span > 0) ? (pwr.toFloat() / span.toFloat()) : 0.0f;
+            if (frac < 0.0f) { frac = 0.0f; }
+            if (frac > 1.0f) { frac = 1.0f; }
             res.zoneIndex = 1;
             res.decimalZone = 1.0f + frac;
+            res.zoneProgress = frac;
+            res.minBound = zones[0];
+            res.maxBound = zones[1];
             res.label = "Z1";
             res.color = Graphics.COLOR_LT_GRAY;
             return res;
@@ -246,8 +268,13 @@ class ZoneCalculator {
                 var zIndex = i; // 2, 3, 4, 5, 6
                 var span = high - low;
                 var frac = (span > 0) ? ((pwr - low).toFloat() / span.toFloat()) : 0.0f;
+                if (frac < 0.0f) { frac = 0.0f; }
+                if (frac > 1.0f) { frac = 1.0f; }
                 res.zoneIndex = zIndex;
                 res.decimalZone = zIndex.toFloat() + frac;
+                res.zoneProgress = frac;
+                res.minBound = low;
+                res.maxBound = high;
                 res.label = "Z" + zIndex;
                 res.color = getPowerZoneColor(zIndex);
                 return res;
@@ -257,6 +284,9 @@ class ZoneCalculator {
         // Zone 7+
         res.zoneIndex = 7;
         res.decimalZone = 7.5f;
+        res.zoneProgress = 1.0f;
+        res.minBound = (count >= 2) ? zones[count - 2] : 0;
+        res.maxBound = zones[count - 1];
         res.label = "Z7";
         res.color = Graphics.COLOR_PURPLE;
         return res;

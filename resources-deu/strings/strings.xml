@@ -8,9 +8,6 @@
     <string id="ThemeModeDark">Dunkler Modus (Dark Mode)</string>
     <string id="ThemeModeLight">Heller Modus (Light Mode)</string>
     <string id="FtpTitle">Schwellenleistung / FTP (Watt)</string>
-    <string id="DisplayFormatTitle">Zonen-Format</string>
-    <string id="FormatDecimal">Kontinuierlich (z. B. 3.4)</string>
-    <string id="FormatInteger">Diskret (z. B. Z3)</string>
     <string id="ColorThemeTitle">Farbdesign</string>
     <string id="ColorThemeAccent">Akzent-Badge</string>
     <string id="ColorThemeFull">Vollflächig gefärbt</string>

@@ -8,9 +8,6 @@
     <string id="ThemeModeDark">Dark Mode</string>
     <string id="ThemeModeLight">Light Mode</string>
     <string id="FtpTitle">FTP (Watts)</string>
-    <string id="DisplayFormatTitle">Zone Format</string>
-    <string id="FormatDecimal">Continuous (e.g. 3.4)</string>
-    <string id="FormatInteger">Discrete (e.g. Z3)</string>
     <string id="ColorThemeTitle">Color Style</string>
     <string id="ColorThemeAccent">Accent Badge</string>
     <string id="ColorThemeFull">Full Background Fill</string>

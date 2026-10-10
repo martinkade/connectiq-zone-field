@@ -15,12 +15,13 @@ class ZoneFieldView extends WatchUi.DataField {
     public var mMetricType as Number = 0;       // 0 = Heart Rate, 1 = Power
     public var mThemeMode as Number = 0;        // 0 = Auto (Device), 1 = Dark Mode, 2 = Light Mode
     public var mFtp as Number = 250;
-    public var mDecimalZone as Boolean = true;  // Continuous 3.4 vs Discrete Z3
     public var mFullBackgroundColor as Boolean = false;
 
     // Computed Runtime State
     public var mCurrentValue as Number? = null;
     public var mAvgValue as Number? = null;
+    public var mMaxValue as Number? = null;
+    public var mActivityTimerMs as Number? = null;
     public var mZoneResult as ZoneResult;
 
     function initialize() {
@@ -58,14 +59,6 @@ class ZoneFieldView extends WatchUi.DataField {
                     mFtp = ftpVal as Number;
                 } else if (ftpVal instanceof String) {
                     mFtp = (ftpVal as String).toNumber();
-                }
-            }
-            var decVal = getSettingValue("decimalZone");
-            if (decVal != null) {
-                if (decVal instanceof Number) {
-                    mDecimalZone = ((decVal as Number) == 0);
-                } else if (decVal instanceof Boolean) {
-                    mDecimalZone = decVal as Boolean;
                 }
             }
             var bgVal = getSettingValue("fullBackgroundColor");
@@ -128,16 +121,36 @@ class ZoneFieldView extends WatchUi.DataField {
             // Heart Rate Mode
             mCurrentValue = info.currentHeartRate;
             mAvgValue = info.averageHeartRate;
+            if (info has :maxHeartRate && info.maxHeartRate != null && info.maxHeartRate > 0) {
+                mMaxValue = info.maxHeartRate;
+            } else if (mCurrentValue != null && mCurrentValue > 0) {
+                if (mMaxValue == null || mCurrentValue > mMaxValue) {
+                    mMaxValue = mCurrentValue;
+                }
+            }
             mZoneResult = mCalculator.calculateHrZone(mCurrentValue);
         } else {
             // Power Mode (7-Zone Coggan model)
             mCurrentValue = info.currentPower;
             mAvgValue = info.averagePower;
+            if (info has :maxPower && info.maxPower != null && info.maxPower > 0) {
+                mMaxValue = info.maxPower;
+            } else if (mCurrentValue != null && mCurrentValue > 0) {
+                if (mMaxValue == null || mCurrentValue > mMaxValue) {
+                    mMaxValue = mCurrentValue;
+                }
+            }
             mZoneResult = mCalculator.calculatePowerZone(mCurrentValue);
         }
 
         // Accumulate active time in current zone (both cumulative and interval)
         mStats.update(info, mZoneResult.zoneIndex);
+
+        if (info.timerTime != null) {
+            mActivityTimerMs = info.timerTime;
+        } else if (info.elapsedTime != null) {
+            mActivityTimerMs = info.elapsedTime;
+        }
     }
 
     // Main drawing method

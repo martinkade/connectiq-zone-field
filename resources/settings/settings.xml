@@ -15,12 +15,6 @@
     <setting propertyKey="@Properties.userFtp" title="@Strings.FtpTitle">
         <settingConfig type="numeric" min="50" max="600" />
     </setting>
-    <setting propertyKey="@Properties.decimalZone" title="@Strings.DisplayFormatTitle">
-        <settingConfig type="list">
-            <listEntry value="0">@Strings.FormatDecimal</listEntry>
-            <listEntry value="1">@Strings.FormatInteger</listEntry>
-        </settingConfig>
-    </setting>
     <setting propertyKey="@Properties.fullBackgroundColor" title="@Strings.ColorThemeTitle">
         <settingConfig type="list">
             <listEntry value="0">@Strings.ColorThemeAccent</listEntry>

@@ -8,31 +8,36 @@
 ---
 
 ## Tagline / Short Description (Store Card)
-> Color-coded training zones for Heart Rate and Power with continuous decimal zones, session averages, and dual cumulative + interval active-zone timers.
+> Glanceable training zones with bottom horizontal stacked bar chart (% time in zone), real-time within-zone indicator, and prominent value with inline zone badge.
 
 ---
 
 ## Full Description
 
-Zones is an all-in-one Garmin Connect IQ Data Field engineered for runners and cyclists who want instant, glanceable training zone feedback during workouts.
+Zones is a redesigned Garmin Connect IQ Data Field engineered for runners and cyclists who want instant, glanceable training zone feedback during workouts.
 
-Whether you train by Heart Rate or Cycling Power, Zones displays your active intensity zone with dynamic color-coding, continuous zone progression, your session average, and a unique dual in-zone timer.
+Whether you train by Heart Rate or Cycling Power, Zones displays your active intensity zone with a bottom-docked horizontal stacked bar chart showing time spent in each zone, a real-time within-zone position indicator, and a prominent hero value with inline color-coded zone badge.
 
 ### Key Features
 * **Dual Metric Support:**
   * **Heart Rate (bpm):** Standard 5-Zone model utilizing sport-specific thresholds and Max HR directly from your Garmin Connect user profile.
   * **Power (Watts):** Dr. Andrew Coggan 7-Zone model calculated from your Functional Threshold Power (FTP).
-* **Glanceable Color Coding & Dynamic Stacks:**
-  * **Edge Bike Computers:** Vertical stack of horizontal zone bars on the right side. The active zone bar dynamically expands into a highlighted banner with its zone name directly inside it (no wasted top header space).
-  * **Circular Watches:** Native circular polar architecture with a sweeping $150^\circ$ radial tachymeter bezel arc gauge, centered equatorial primary digits, and bezel-curved data pods.
-* **Unit Indicator:** Displays `W` or `bpm` next to the main digits, dynamically tinted in the active zone's accent.
+* **Bottom Horizontal Stacked Bar Chart (Time in Zone):**
+  * Segments reflect percentage of total session time spent in each zone (5 for Heart Rate, 7 for Power).
+  * Flush to the bottom of the data field.
+  * The active training zone segment is elevated slightly higher than inactive segments for instant glanceability.
+  * Balanced baseline initialization and minimum visible width protection when entering new zones.
+* **Real-Time Within-Zone Position Indicator:**
+  * Directly above the elevated active segment, a downward-pointing caret indicator (`▼`) pinpoints exactly where your live measured value sits between the zone's lower and upper bounds.
+* **Hero Measured Value & Inline Active Zone Badge:**
+  * Large, bold digits for your live measured value without distracting unit clutter.
+  * Large inline badge to the right displaying the active zone (e.g., `Z2`, `Z4`) with vibrant zone color fill and automatic contrast text.
+* **Dynamic Form Factor Adaptation for Wearables:**
+  * **Edge Bike Computers & Middle Bands:** Bottom-docked horizontal stacked bar with elevated active segment, indicator, and centered hero value + badge above.
+  * **Watches Top Half Screen:** Stacked bar pinned as an arc along the top bezel curve with radially thicker active segment, indicator caret, and hero value + badge below.
+  * **Watches Bottom Half Screen:** Stacked bar pinned along the bottom bezel curve with elevated active segment, indicator above, and hero value + badge above.
+  * **Watches Full Screen (1-Field):** Pinned bottom bezel arc with indicator and centered hero value + inline badge.
 * **Dark Mode & Light Mode Support:** Automatically follows your device's day/night profile or forces Dark Mode / Light Mode based on your personal preference.
-* **Continuous Decimal Zones:** See your exact progress within your active zone (e.g., `3.4`) or toggle classic discrete badges (`Z3`).
-* **Dual Active-Zone Timer:**
-  * Displays both your **total cumulative session time** in the current zone and your continuous **interval duration** in brackets:
-    $$\mathbf{14:22\ (1:45)} \quad \text{— [Cumulative Time] ([Interval Time])}$$
-  * The interval timer automatically resets to `0:00` when shifting intensity zones, while cumulative session totals continue to accumulate.
-* **Session Average:** Keep track of your workout pacing with persistent average Heart Rate or Power.
 * **Automatic Garmin Profile Sync:** Reads sport-specific Max HR and FTP directly from Garmin Connect user profiles, with manual overrides in App Settings.
 * **Responsive Across All Displays:**
   * **Edge Bike Computers:** Optimized rectangular 1 to 10-field grids.
@@ -45,8 +50,7 @@ Customize your preferences via **Garmin Connect Mobile** or **Garmin Express**:
 1. **Metric:** Heart Rate (default) or Power
 2. **Theme Mode:** Auto (Follow Device), Dark Mode, or Light Mode
 3. **Custom FTP:** Set your Functional Threshold Power (50 – 600 W)
-4. **Zone Display Format:** Continuous Decimal (`3.4`) vs. Discrete Badge (`Z3`)
-5. **Color Theme:** Accent Badge Pill (battery-friendly) or Full Background Fill
+4. **Color Theme:** Accent Badge Pill (battery-friendly) or Full Background Fill
 
 ---
 
@@ -81,6 +85,6 @@ Customize your preferences via **Garmin Connect Mobile** or **Garmin Express**:
 ### Store Upload Assets Checklist
 * **App Icon (500x500):** `assets/cover.png`
 * **Hero Banner (1440x720):** `assets/hero.png`
-* **Device Screenshot 1 (Edge):** `assets/screenshots/screenshot_edge1040_power.jpg` (Cycling Power, Z4 Threshold, <150 KB JPEG)
-* **Device Screenshot 2 (Forerunner):** `assets/screenshots/screenshot_forerunner970_hr.jpg` (Running HR, Z3 Aerobic, <150 KB JPEG)
-* **Device Screenshot 3 (Fenix):** `assets/screenshots/screenshot_fenix8_fullbg.jpg` (Full Background Theme, Z5 Max, <150 KB JPEG)
+* **Device Screenshot 1 (Edge):** `assets/screenshots/screenshot_edge1040_power.jpg` (Edge 1040: Cycling Power 285W, Z4 Badge, elevated yellow segment & caret indicator, <150 KB JPEG)
+* **Device Screenshot 2 (Forerunner):** `assets/screenshots/screenshot_forerunner970_hr.jpg` (Forerunner 970: Running HR 156 bpm, Z3 Badge, bottom bezel arc stacked bar & indicator, <150 KB JPEG)
+* **Device Screenshot 3 (Fenix):** `assets/screenshots/screenshot_fenix8_fullbg.jpg` (Fenix 8: Top-half split with pinned top arc stacked bar, Z5 Max & hero value below, <150 KB JPEG)

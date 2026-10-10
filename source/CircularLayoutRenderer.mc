@@ -1,5 +1,7 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
+import Toybox.System;
 import Toybox.WatchUi;
 
 class CircularLayoutRenderer {
@@ -17,17 +19,183 @@ class CircularLayoutRenderer {
         if (isFullScreen) {
             renderFullScreen(dc, view, width, height);
         } else if ((obscurity & WatchUi.DataField.OBSCURE_TOP) != 0) {
-            renderTopHalf(dc, view, width, height);
+            renderTopDome(dc, view, width, height);
         } else if ((obscurity & WatchUi.DataField.OBSCURE_BOTTOM) != 0) {
-            renderBottomHalf(dc, view, width, height);
+            renderBottomBowl(dc, view, width, height);
         } else {
-            renderMiddleSlice(dc, view, width, height);
+            renderMiddleBand(dc, view, width, height);
         }
     }
 
-    // -------------------------------------------------------------
-    // 1. Full Circular Watch Screen (1-Field layout on round watches)
-    // -------------------------------------------------------------
+    // =============================================================
+    // 1. Top Dome Screen (Upper Half of Watch Face: OBSCURE_TOP)
+    // Dynamic adaptation: Pin arc stacked bar to the top bezel,
+    // active segment radially thicker, indicator below it, hero value below.
+    // =============================================================
+    private function renderTopDome(
+        dc as Graphics.Dc,
+        view as ZoneFieldView,
+        width as Number,
+        height as Number
+    ) as Void {
+        var cx = width / 2;
+        var cy = height; // circle center is at bottom chord
+        var radius = width / 2;
+        var activeZone = view.mZoneResult.zoneIndex;
+        var numZones = (view.mMetricType == 1) ? 7 : 5;
+
+        // Top arc spans 120 degrees: 150 deg (left) clockwise to 30 deg (right)
+        var totalAngle = 120;
+        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, 12);
+
+        var arcR = radius - 8;
+        var penInactive = 8;
+        var penActive = 14;
+
+        var curAngle = 150;
+        var actStartAngle = 150;
+        var actSpanAngle = 0;
+
+        // 1. Draw Pinned Top Arc Stacked Bar
+        for (var i = 0; i < numZones; i++) {
+            var zNum = i + 1;
+            var span = segAngles[i];
+            if (span <= 0) {
+                continue;
+            }
+
+            var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
+            var endAngle = curAngle - span;
+            var isAct = (zNum == activeZone);
+
+            if (isAct) {
+                actStartAngle = curAngle;
+                actSpanAngle = span;
+                dc.setPenWidth(penActive);
+                if (view.mFullBackgroundColor && activeZone > 0) {
+                    segCol = Graphics.COLOR_WHITE;
+                }
+            } else {
+                dc.setPenWidth(penInactive);
+            }
+
+            dc.setColor(segCol, segCol);
+            dc.drawArc(cx, cy, arcR, Graphics.ARC_CLOCKWISE, curAngle, endAngle);
+
+            curAngle = endAngle;
+        }
+
+        // 2. Indicator Pip/Caret along the active arc segment
+        var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
+        if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actSpanAngle > 0) {
+            var progress = view.mZoneResult.zoneProgress;
+            var indAngle = actStartAngle.toFloat() - (progress * actSpanAngle.toFloat());
+            var indRad = Math.toRadians(indAngle);
+
+            // Pip position on the inner edge of the active arc
+            var pipR = arcR - (penActive / 2) - 4;
+            var pipX = cx + (pipR.toFloat() * Math.cos(indRad)).toNumber();
+            var pipY = cy - (pipR.toFloat() * Math.sin(indRad)).toNumber();
+
+            var pipCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : view.mZoneResult.color;
+            dc.setColor(pipCol, pipCol);
+            dc.fillCircle(pipX, pipY, 5);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+            dc.fillCircle(pipX, pipY, 2);
+        }
+
+        // 3. Hero Value + Inline Active Zone Badge (positioned below the arc)
+        var heroCenterY = (height * 0.58).toNumber();
+        var maxW = (width * 0.85).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
+    }
+
+    // =============================================================
+    // 2. Bottom Bowl Screen (Lower Half of Watch Face: OBSCURE_BOTTOM)
+    // Dynamic adaptation: Pin arc stacked bar to the bottom bezel,
+    // active segment radially thicker, indicator above it, hero value above.
+    // =============================================================
+    private function renderBottomBowl(
+        dc as Graphics.Dc,
+        view as ZoneFieldView,
+        width as Number,
+        height as Number
+    ) as Void {
+        var cx = width / 2;
+        var cy = 0; // circle center is at flat top chord
+        var radius = width / 2;
+        var activeZone = view.mZoneResult.zoneIndex;
+        var numZones = (view.mMetricType == 1) ? 7 : 5;
+
+        // Bottom arc spans 120 degrees: 210 deg (left) counter-clockwise to 330 deg (right)
+        var totalAngle = 120;
+        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, 12);
+
+        var arcR = radius - 8;
+        var penInactive = 8;
+        var penActive = 14;
+
+        var curAngle = 210;
+        var actStartAngle = 210;
+        var actSpanAngle = 0;
+
+        // 1. Draw Pinned Bottom Arc Stacked Bar
+        for (var i = 0; i < numZones; i++) {
+            var zNum = i + 1;
+            var span = segAngles[i];
+            if (span <= 0) {
+                continue;
+            }
+
+            var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
+            var endAngle = curAngle + span;
+            var isAct = (zNum == activeZone);
+
+            if (isAct) {
+                actStartAngle = curAngle;
+                actSpanAngle = span;
+                dc.setPenWidth(penActive);
+                if (view.mFullBackgroundColor && activeZone > 0) {
+                    segCol = Graphics.COLOR_WHITE;
+                }
+            } else {
+                dc.setPenWidth(penInactive);
+            }
+
+            dc.setColor(segCol, segCol);
+            dc.drawArc(cx, cy, arcR, Graphics.ARC_COUNTER_CLOCKWISE, curAngle, endAngle);
+
+            curAngle = endAngle;
+        }
+
+        // 2. Indicator Pip/Caret along the active arc segment
+        var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
+        if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actSpanAngle > 0) {
+            var progress = view.mZoneResult.zoneProgress;
+            var indAngle = actStartAngle.toFloat() + (progress * actSpanAngle.toFloat());
+            var indRad = Math.toRadians(indAngle);
+
+            // Pip position on the upper/inner edge of the bottom arc
+            var pipR = arcR - (penActive / 2) - 4;
+            var pipX = cx + (pipR.toFloat() * Math.cos(indRad)).toNumber();
+            var pipY = cy - (pipR.toFloat() * Math.sin(indRad)).toNumber();
+
+            var pipCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : view.mZoneResult.color;
+            dc.setColor(pipCol, pipCol);
+            dc.fillCircle(pipX, pipY, 5);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+            dc.fillCircle(pipX, pipY, 2);
+        }
+
+        // 3. Hero Value + Inline Active Zone Badge (positioned above the bottom arc)
+        var heroCenterY = (height * 0.38).toNumber();
+        var maxW = (width * 0.85).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
+    }
+
+    // =============================================================
+    // 3. Full Circular Screen (1-Field Watch Layout)
+    // =============================================================
     private function renderFullScreen(
         dc as Graphics.Dc,
         view as ZoneFieldView,
@@ -37,393 +205,304 @@ class CircularLayoutRenderer {
         var cx = width / 2;
         var cy = height / 2;
         var radius = width / 2;
-
-        var isDark = view.isDarkTheme();
-        var zoneColor = view.mZoneResult.color;
-        var colors = view.getTextColor(zoneColor, isDark);
-        var fgColor = colors[0];
-        var subTextColor = colors[1];
-        var activeIndex = view.mZoneResult.zoneIndex;
+        var activeZone = view.mZoneResult.zoneIndex;
         var numZones = (view.mMetricType == 1) ? 7 : 5;
 
-        var valueStr = (view.mCurrentValue != null && view.mCurrentValue > 0) ? view.mCurrentValue.format("%d") : "--";
-        var avgStr = (view.mAvgValue != null && view.mAvgValue > 0) ? view.mAvgValue.format("%d") : "--";
-        var metricLabel = (view.mMetricType == 0) ? "HEART RATE" : "POWER";
-        var unitStr = (view.mMetricType == 1) ? "W" : "bpm";
+        // Top Subtle Clock
+        drawTopClock(dc, cx, cy - (radius * 0.78).toNumber());
 
-        var zoneBadgeStr;
-        if (view.mDecimalZone && activeIndex > 0) {
-            zoneBadgeStr = "Z" + view.mZoneResult.decimalZone.format("%.1f");
-        } else if (activeIndex > 0) {
-            zoneBadgeStr = "Z" + activeIndex;
-        } else {
-            zoneBadgeStr = "--";
+        // Pinned Bottom Arc Stacked Bar (210 deg to 330 deg counter-clockwise)
+        var totalAngle = 120;
+        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, 12);
+
+        var arcR = radius - 10;
+        var penInactive = 10;
+        var penActive = 16;
+
+        var curAngle = 210;
+        var actStartAngle = 210;
+        var actSpanAngle = 0;
+
+        for (var i = 0; i < numZones; i++) {
+            var zNum = i + 1;
+            var span = segAngles[i];
+            if (span <= 0) {
+                continue;
+            }
+
+            var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
+            var endAngle = curAngle + span;
+            var isAct = (zNum == activeZone);
+
+            if (isAct) {
+                actStartAngle = curAngle;
+                actSpanAngle = span;
+                dc.setPenWidth(penActive);
+                if (view.mFullBackgroundColor && activeZone > 0) {
+                    segCol = Graphics.COLOR_WHITE;
+                }
+            } else {
+                dc.setPenWidth(penInactive);
+            }
+
+            dc.setColor(segCol, segCol);
+            dc.drawArc(cx, cy, arcR, Graphics.ARC_COUNTER_CLOCKWISE, curAngle, endAngle);
+
+            curAngle = endAngle;
         }
 
-        // 1. Radial Tachymeter Bezel Arc Gauge (165° down to 15° clockwise, 150° span centered at 12 o'clock)
-        var arcR = radius - 8;
-        var totalSweep = 150.0;
-        var stepAngle = totalSweep / numZones.toFloat();
+        // Indicator Pip on the active segment
+        var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
+        if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actSpanAngle > 0) {
+            var progress = view.mZoneResult.zoneProgress;
+            var indAngle = actStartAngle.toFloat() + (progress * actSpanAngle.toFloat());
+            var indRad = Math.toRadians(indAngle);
 
-        for (var z = 1; z <= numZones; z++) {
-            var bColor = view.mCalculator.getZoneColor(view.mMetricType, z);
-            var isActive = (activeIndex == z);
+            var pipR = arcR - (penActive / 2) - 5;
+            var pipX = cx + (pipR.toFloat() * Math.cos(indRad)).toNumber();
+            var pipY = cy - (pipR.toFloat() * Math.sin(indRad)).toNumber();
 
-            var startA = (165.0 - ((z - 1).toFloat() * stepAngle)).toNumber();
-            var endA = (165.0 - (z.toFloat() * stepAngle)).toNumber();
-
-            var penW = isActive ? 12 : 5;
-            dc.setPenWidth(penW);
-            dc.setColor(bColor, bColor);
-            dc.drawArc(cx, cy, arcR, Graphics.ARC_CLOCKWISE, startA - 1, endA + 1);
+            var pipCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : view.mZoneResult.color;
+            dc.setColor(pipCol, pipCol);
+            dc.fillCircle(pipX, pipY, 6);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+            dc.fillCircle(pipX, pipY, 2);
         }
-        dc.setPenWidth(1);
 
-        // 2. Top Section: Metric Label + Active Zone Badge
-        var topY = cy - (radius * 0.60).toNumber();
-        var fontTiny = Graphics.FONT_XTINY;
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, topY, fontTiny, metricLabel, Graphics.TEXT_JUSTIFY_CENTER);
-
-        var badgeW = 60;
-        var badgeH = 22;
-        var badgeX = cx - (badgeW / 2);
-        var badgeY = topY + dc.getFontHeight(fontTiny) + 2;
-
-        if (!view.mFullBackgroundColor) {
-            dc.setColor(zoneColor, zoneColor);
-            dc.fillRoundedRectangle(badgeX, badgeY, badgeW, badgeH, 4);
-
-            var badgeTextCol = (zoneColor == Graphics.COLOR_YELLOW || zoneColor == Graphics.COLOR_LT_GRAY) ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
-            dc.setColor(badgeTextCol, Graphics.COLOR_TRANSPARENT);
-        } else {
-            dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawRoundedRectangle(badgeX, badgeY, badgeW, badgeH, 4);
-        }
-        dc.drawText(cx, badgeY + (badgeH / 2) - (dc.getFontHeight(fontTiny) / 2) - 1, fontTiny, zoneBadgeStr, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // 3. Center Section: Huge Primary Value + Baseline Unit
-        var valFont = (radius > 170) ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM;
-        var valW = dc.getTextWidthInPixels(valueStr, valFont);
-        var unitW = dc.getTextWidthInPixels(unitStr, fontTiny);
-        var totalNumW = valW + 4 + unitW;
-        var numStartX = cx - (totalNumW / 2);
-        var valFontH = dc.getFontHeight(valFont);
-        var valY = cy - (valFontH / 2) - 2;
-
-        dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(numStartX, valY, valFont, valueStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        var unitY = valY + valFontH - dc.getFontHeight(fontTiny) - 4;
-        var unitColor = (view.mFullBackgroundColor && activeIndex > 0) ? fgColor : zoneColor;
-        if (unitColor == Graphics.COLOR_LT_GRAY && !isDark) {
-            unitColor = subTextColor;
-        }
-        dc.setColor(unitColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(numStartX + valW + 4, unitY, fontTiny, unitStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        // 4. Bottom Section: Session Average & In-Zone Timers
-        var botY = cy + (radius * 0.38).toNumber();
-        var avgText = "AVG " + avgStr;
-        var cumSec = view.mStats.getCumulativeSeconds(activeIndex);
-        var intSec = view.mStats.getIntervalSeconds();
-        var dualTimeStr = Lang.format("$1$ ($2$)", [view.mStats.formatDuration(cumSec), view.mStats.formatDuration(intSec)]);
-
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, botY, fontTiny, avgText, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(cx, botY + dc.getFontHeight(fontTiny) + 2, fontTiny, dualTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        // Hero Value + Inline Active Zone Badge (Hero centered prominently)
+        var heroCenterY = cy - 4;
+        var maxW = (width * 0.85).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
     }
 
-    // -------------------------------------------------------------
-    // 2. Watch Top Half Screen (2-Field Screen, Top Dome)
-    // -------------------------------------------------------------
-    private function renderTopHalf(
+    // =============================================================
+    // 4. Middle Band Screen (Multi-field horizontal slice)
+    // =============================================================
+    private function renderMiddleBand(
         dc as Graphics.Dc,
         view as ZoneFieldView,
         width as Number,
         height as Number
     ) as Void {
-        var cx = width / 2;
-        var cy = height;
-        var radius = width / 2;
-
         var isDark = view.isDarkTheme();
-        var zoneColor = view.mZoneResult.color;
-        var colors = view.getTextColor(zoneColor, isDark);
-        var fgColor = colors[0];
-        var subTextColor = colors[1];
-        var activeIndex = view.mZoneResult.zoneIndex;
+        var activeZone = view.mZoneResult.zoneIndex;
         var numZones = (view.mMetricType == 1) ? 7 : 5;
 
-        var valueStr = (view.mCurrentValue != null && view.mCurrentValue > 0) ? view.mCurrentValue.format("%d") : "--";
-        var avgStr = (view.mAvgValue != null && view.mAvgValue > 0) ? view.mAvgValue.format("%d") : "--";
-        var metricLabel = (view.mMetricType == 0) ? "HR" : "PWR";
-        var unitStr = (view.mMetricType == 1) ? "W" : "bpm";
+        // In middle band, width has horizontal borders
+        var padLeft = 10;
+        var padRight = 10;
+        var barW = width - padLeft - padRight;
+        var barBottomY = height - 3;
+        var baseBarH = (height > 90) ? 8 : 6;
+        var activeBarH = baseBarH + 4;
+        var minActiveW = 16;
 
-        var zoneBadgeStr;
-        if (view.mDecimalZone && activeIndex > 0) {
-            zoneBadgeStr = "Z" + view.mZoneResult.decimalZone.format("%.1f");
-        } else if (activeIndex > 0) {
-            zoneBadgeStr = "Z" + activeIndex;
-        } else {
-            zoneBadgeStr = "--";
+        var segmentWidths = view.mStats.computeSegmentWidths(barW, activeZone, minActiveW);
+
+        // 1. Bottom Stacked Bar
+        var curX = padLeft;
+        var actStartX = padLeft;
+        var actW = 0;
+
+        for (var i = 0; i < numZones; i++) {
+            var zNum = i + 1;
+            var segW = segmentWidths[i];
+            if (segW <= 0) {
+                continue;
+            }
+
+            var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
+            var isAct = (zNum == activeZone);
+
+            if (isAct) {
+                actStartX = curX;
+                actW = segW;
+                var segY = barBottomY - activeBarH;
+                var actCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : segCol;
+                dc.setColor(actCol, actCol);
+                dc.fillRectangle(curX, segY, segW, activeBarH);
+
+                var borderCol = (view.mFullBackgroundColor && activeZone > 0)
+                    ? Graphics.COLOR_DK_GRAY
+                    : (isDark ? Graphics.COLOR_WHITE : Graphics.COLOR_BLACK);
+                dc.setColor(borderCol, Graphics.COLOR_TRANSPARENT);
+                dc.drawRectangle(curX, segY, segW, activeBarH);
+            } else {
+                var segY = barBottomY - baseBarH;
+                dc.setColor(segCol, segCol);
+                dc.fillRectangle(curX, segY, segW, baseBarH);
+            }
+
+            curX += segW;
         }
 
-        // 1. Top Bezel Arc (155° down to 25° clockwise, 130° span)
-        var arcR = radius - 6;
-        var totalSweep = 130.0;
-        var stepAngle = totalSweep / numZones.toFloat();
+        // 2. Position Indicator Caret
+        var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
+        var triH = 4;
+        var triHalfW = 3;
+        var indBottomY = barBottomY - activeBarH - 2;
 
-        for (var z = 1; z <= numZones; z++) {
-            var bColor = view.mCalculator.getZoneColor(view.mMetricType, z);
-            var isActive = (activeIndex == z);
+        if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actW > 0) {
+            var progress = view.mZoneResult.zoneProgress;
+            var indX = actStartX + (progress * actW).toNumber();
+            var minIndX = actStartX + triHalfW;
+            var maxIndX = actStartX + actW - triHalfW;
+            if (indX < minIndX) { indX = minIndX; }
+            if (indX > maxIndX) { indX = maxIndX; }
 
-            var startA = (155.0 - ((z - 1).toFloat() * stepAngle)).toNumber();
-            var endA = (155.0 - (z.toFloat() * stepAngle)).toNumber();
-
-            var penW = isActive ? 10 : 4;
-            dc.setPenWidth(penW);
-            dc.setColor(bColor, bColor);
-            dc.drawArc(cx, cy, arcR, Graphics.ARC_CLOCKWISE, startA - 1, endA + 1);
+            var triTopY = indBottomY - triH;
+            var indCol = (view.mFullBackgroundColor && activeZone > 0)
+                ? Graphics.COLOR_WHITE
+                : (isDark ? Graphics.COLOR_WHITE : Graphics.COLOR_BLACK);
+            dc.setColor(indCol, indCol);
+            dc.fillPolygon([
+                [indX, indBottomY],
+                [indX - triHalfW, triTopY],
+                [indX + triHalfW, triTopY]
+            ]);
         }
-        dc.setPenWidth(1);
 
-        // 2. Metric Header + Active Zone Badge
-        var fontTiny = Graphics.FONT_XTINY;
-        var topY = 16;
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx - 36, topY + 2, fontTiny, metricLabel, Graphics.TEXT_JUSTIFY_RIGHT);
-
-        var badgeW = 48;
-        var badgeH = 18;
-        var badgeX = cx - 24;
-        if (!view.mFullBackgroundColor) {
-            dc.setColor(zoneColor, zoneColor);
-            dc.fillRoundedRectangle(badgeX, topY, badgeW, badgeH, 3);
-            var badgeTextCol = (zoneColor == Graphics.COLOR_YELLOW || zoneColor == Graphics.COLOR_LT_GRAY) ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
-            dc.setColor(badgeTextCol, Graphics.COLOR_TRANSPARENT);
-        } else {
-            dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawRoundedRectangle(badgeX, topY, badgeW, badgeH, 3);
-        }
-        dc.drawText(badgeX + (badgeW / 2), topY + (badgeH / 2) - (dc.getFontHeight(fontTiny) / 2) - 1, fontTiny, zoneBadgeStr, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // 3. Primary Value at bottom flat edge where width is maximum
-        var valFont = (height > 110) ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM;
-        var valW = dc.getTextWidthInPixels(valueStr, valFont);
-        var unitW = dc.getTextWidthInPixels(unitStr, fontTiny);
-        var totalNumW = valW + 4 + unitW;
-        var startX = cx - (totalNumW / 2);
-        var valFontH = dc.getFontHeight(valFont);
-        var valY = height - valFontH - 6;
-
-        dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX, valY, valFont, valueStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        var unitY = valY + valFontH - dc.getFontHeight(fontTiny) - 4;
-        var unitColor = (view.mFullBackgroundColor && activeIndex > 0) ? fgColor : zoneColor;
-        if (unitColor == Graphics.COLOR_LT_GRAY && !isDark) {
-            unitColor = subTextColor;
-        }
-        dc.setColor(unitColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX + valW + 4, unitY, fontTiny, unitStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        // 4. AVG and Time
-        var cumSec = view.mStats.getCumulativeSeconds(activeIndex);
-        var timeStr = view.mStats.formatDuration(cumSec);
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(24, height - dc.getFontHeight(fontTiny) - 2, fontTiny, "AVG " + avgStr, Graphics.TEXT_JUSTIFY_LEFT);
-        dc.drawText(width - 24, height - dc.getFontHeight(fontTiny) - 2, fontTiny, timeStr, Graphics.TEXT_JUSTIFY_RIGHT);
+        // 3. Hero Value + Inline Badge
+        var heroAvailH = indBottomY - triH - 4;
+        var heroCenterY = 2 + (heroAvailH / 2);
+        drawHeroValueAndBadge(dc, view, width / 2, heroCenterY, barW);
     }
 
-    // -------------------------------------------------------------
-    // 3. Watch Bottom Half Screen (2-Field Screen, Bottom Bowl)
-    // -------------------------------------------------------------
-    private function renderBottomHalf(
+    // =============================================================
+    // Helper: Draw Hero Value (large, no unit) + Inline Active Zone Badge
+    // =============================================================
+    private function drawHeroValueAndBadge(
         dc as Graphics.Dc,
         view as ZoneFieldView,
-        width as Number,
-        height as Number
+        centerX as Number,
+        centerY as Number,
+        maxAllowedW as Number
     ) as Void {
-        var cx = width / 2;
-        var cy = 0;
-        var radius = width / 2;
-
         var isDark = view.isDarkTheme();
         var zoneColor = view.mZoneResult.color;
         var colors = view.getTextColor(zoneColor, isDark);
         var fgColor = colors[0];
-        var subTextColor = colors[1];
-        var activeIndex = view.mZoneResult.zoneIndex;
-        var numZones = (view.mMetricType == 1) ? 7 : 5;
+        var activeZone = view.mZoneResult.zoneIndex;
 
-        var valueStr = (view.mCurrentValue != null && view.mCurrentValue > 0) ? view.mCurrentValue.format("%d") : "--";
-        var avgStr = (view.mAvgValue != null && view.mAvgValue > 0) ? view.mAvgValue.format("%d") : "--";
-        var metricLabel = (view.mMetricType == 0) ? "HR" : "PWR";
-        var unitStr = (view.mMetricType == 1) ? "W" : "bpm";
+        var valueStr = (view.mCurrentValue != null && view.mCurrentValue > 0)
+            ? view.mCurrentValue.format("%d")
+            : "--";
 
-        var zoneBadgeStr;
-        if (view.mDecimalZone && activeIndex > 0) {
-            zoneBadgeStr = "Z" + view.mZoneResult.decimalZone.format("%.1f");
-        } else if (activeIndex > 0) {
-            zoneBadgeStr = "Z" + activeIndex;
-        } else {
-            zoneBadgeStr = "--";
+        var badgeStr = (activeZone > 0) ? ("Z" + activeZone) : "--";
+
+        // Select optimal numeric font and badge font (stepped down for clean proportion)
+        var fontVal = Graphics.FONT_NUMBER_MEDIUM;
+        var fontBadge = Graphics.FONT_SMALL;
+        var gap = 8;
+        var padBadgeY = 3;
+
+        if (maxAllowedW < 180) {
+            fontVal = Graphics.FONT_LARGE;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 5;
+            padBadgeY = 2;
+        } else if (maxAllowedW < 230) {
+            fontVal = Graphics.FONT_NUMBER_MILD;
+            fontBadge = Graphics.FONT_TINY;
+            gap = 6;
+            padBadgeY = 2;
         }
 
-        // 1. Primary Value at top flat edge where width is maximum
-        var fontTiny = Graphics.FONT_XTINY;
-        var valFont = (height > 110) ? Graphics.FONT_NUMBER_HOT : Graphics.FONT_NUMBER_MEDIUM;
-        var valW = dc.getTextWidthInPixels(valueStr, valFont);
-        var unitW = dc.getTextWidthInPixels(unitStr, fontTiny);
-        var totalNumW = valW + 4 + unitW;
-        var startX = cx - (totalNumW / 2);
-        var valFontH = dc.getFontHeight(valFont);
-        var valY = 4;
+        var valW = dc.getTextWidthInPixels(valueStr, fontVal);
+        var badgeTxtW = dc.getTextWidthInPixels(badgeStr, fontBadge);
+        var badgeTxtH = dc.getFontHeight(fontBadge);
+        var badgeBoxH = badgeTxtH + (2 * padBadgeY);
+        var padBadgeX = (badgeBoxH * 0.42).toNumber();
+        if (padBadgeX < 7) {
+            padBadgeX = 7;
+        }
+        var badgeBoxW = badgeTxtW + (2 * padBadgeX);
+        if (badgeBoxW < badgeBoxH) {
+            badgeBoxW = badgeBoxH;
+        }
+        var groupW = valW + gap + badgeBoxW;
 
+        if (groupW > maxAllowedW) {
+            if (fontVal == Graphics.FONT_NUMBER_MEDIUM) {
+                fontVal = Graphics.FONT_NUMBER_MILD;
+                fontBadge = Graphics.FONT_TINY;
+            } else if (fontVal == Graphics.FONT_NUMBER_MILD) {
+                fontVal = Graphics.FONT_LARGE;
+                fontBadge = Graphics.FONT_XTINY;
+            }
+            valW = dc.getTextWidthInPixels(valueStr, fontVal);
+            badgeTxtW = dc.getTextWidthInPixels(badgeStr, fontBadge);
+            badgeTxtH = dc.getFontHeight(fontBadge);
+            badgeBoxH = badgeTxtH + (2 * padBadgeY);
+            padBadgeX = (badgeBoxH * 0.42).toNumber();
+            if (padBadgeX < 6) {
+                padBadgeX = 6;
+            }
+            badgeBoxW = badgeTxtW + (2 * padBadgeX);
+            if (badgeBoxW < badgeBoxH) {
+                badgeBoxW = badgeBoxH;
+            }
+            groupW = valW + gap + badgeBoxW;
+        }
+
+        var startX = centerX - (groupW / 2);
+        var valX = startX;
+        var badgeX = valX + valW + gap;
+
+        var valFontH = dc.getFontHeight(fontVal);
+        var valY = centerY - (valFontH / 2);
+        var badgeY = valY + ((valFontH - badgeBoxH) / 2);
+
+        // Draw Value
         dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX, valY, valFont, valueStr, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(valX, valY, fontVal, valueStr, Graphics.TEXT_JUSTIFY_LEFT);
 
-        var unitY = valY + valFontH - dc.getFontHeight(fontTiny) - 4;
-        var unitColor = (view.mFullBackgroundColor && activeIndex > 0) ? fgColor : zoneColor;
-        if (unitColor == Graphics.COLOR_LT_GRAY && !isDark) {
-            unitColor = subTextColor;
-        }
-        dc.setColor(unitColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX + valW + 4, unitY, fontTiny, unitStr, Graphics.TEXT_JUSTIFY_LEFT);
+        // Draw Badge as a smooth pill (corner radius = half height)
+        var pillRadius = (badgeBoxH / 2).toNumber();
+        var bFill;
+        var bTextCol;
 
-        // 2. Middle: Metric Tag + Zone Badge Pill
-        var midY = valY + valFontH + 2;
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx - 36, midY + 2, fontTiny, metricLabel, Graphics.TEXT_JUSTIFY_RIGHT);
-
-        var badgeW = 48;
-        var badgeH = 18;
-        var badgeX = cx - 24;
-        if (!view.mFullBackgroundColor) {
-            dc.setColor(zoneColor, zoneColor);
-            dc.fillRoundedRectangle(badgeX, midY, badgeW, badgeH, 3);
-            var badgeTextCol = (zoneColor == Graphics.COLOR_YELLOW || zoneColor == Graphics.COLOR_LT_GRAY) ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
-            dc.setColor(badgeTextCol, Graphics.COLOR_TRANSPARENT);
+        if (view.mFullBackgroundColor && activeZone > 0) {
+            bFill = Graphics.COLOR_WHITE;
+            bTextCol = Graphics.COLOR_BLACK;
         } else {
-            dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawRoundedRectangle(badgeX, midY, badgeW, badgeH, 3);
+            bFill = (activeZone > 0) ? zoneColor : Graphics.COLOR_DK_GRAY;
+            bTextCol = (bFill == Graphics.COLOR_YELLOW || bFill == Graphics.COLOR_LT_GRAY)
+                ? Graphics.COLOR_BLACK
+                : Graphics.COLOR_WHITE;
         }
-        dc.drawText(badgeX + (badgeW / 2), midY + (badgeH / 2) - (dc.getFontHeight(fontTiny) / 2) - 1, fontTiny, zoneBadgeStr, Graphics.TEXT_JUSTIFY_CENTER);
 
-        // 3. Bottom Bezel Arc (205° to 335° counter-clockwise, 130° span along bottom bowl)
-        var arcR = radius - 6;
-        var totalSweep = 130.0;
-        var stepAngle = totalSweep / numZones.toFloat();
+        dc.setColor(bFill, bFill);
+        dc.fillRoundedRectangle(badgeX, badgeY, badgeBoxW, badgeBoxH, pillRadius);
 
-        for (var z = 1; z <= numZones; z++) {
-            var bColor = view.mCalculator.getZoneColor(view.mMetricType, z);
-            var isActive = (activeIndex == z);
-
-            var startA = (205.0 + ((z - 1).toFloat() * stepAngle)).toNumber();
-            var endA = (205.0 + (z.toFloat() * stepAngle)).toNumber();
-
-            var penW = isActive ? 10 : 4;
-            dc.setPenWidth(penW);
-            dc.setColor(bColor, bColor);
-            dc.drawArc(cx, cy, arcR, Graphics.ARC_COUNTER_CLOCKWISE, startA - 1, endA + 1);
-        }
-        dc.setPenWidth(1);
-
-        // 4. Stats: AVG and Time
-        var cumSec = view.mStats.getCumulativeSeconds(activeIndex);
-        var timeStr = view.mStats.formatDuration(cumSec);
-        var botY = height - dc.getFontHeight(fontTiny) - 14;
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, botY, fontTiny, "AVG " + avgStr + "   " + timeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(bTextCol, Graphics.COLOR_TRANSPARENT);
+        var badgeTextY = badgeY + ((badgeBoxH - badgeTxtH) / 2) - 1;
+        dc.drawText(badgeX + (badgeBoxW / 2), badgeTextY, fontBadge, badgeStr, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    // -------------------------------------------------------------
-    // 4. Watch Middle Slice / Multi-field Screen
-    // -------------------------------------------------------------
-    private function renderMiddleSlice(
-        dc as Graphics.Dc,
-        view as ZoneFieldView,
-        width as Number,
-        height as Number
-    ) as Void {
-        var cx = width / 2;
-        var isDark = view.isDarkTheme();
-        var zoneColor = view.mZoneResult.color;
-        var colors = view.getTextColor(zoneColor, isDark);
-        var fgColor = colors[0];
-        var subTextColor = colors[1];
-        var activeIndex = view.mZoneResult.zoneIndex;
-        var numZones = (view.mMetricType == 1) ? 7 : 5;
-
-        var valueStr = (view.mCurrentValue != null && view.mCurrentValue > 0) ? view.mCurrentValue.format("%d") : "--";
-        var avgStr = (view.mAvgValue != null && view.mAvgValue > 0) ? view.mAvgValue.format("%d") : "--";
-        var metricLabel = (view.mMetricType == 0) ? "HR" : "PWR";
-        var unitStr = (view.mMetricType == 1) ? "W" : "bpm";
-
-        var zoneBadgeStr;
-        if (view.mDecimalZone && activeIndex > 0) {
-            zoneBadgeStr = "Z" + view.mZoneResult.decimalZone.format("%.1f");
-        } else if (activeIndex > 0) {
-            zoneBadgeStr = "Z" + activeIndex;
-        } else {
-            zoneBadgeStr = "--";
-        }
-
-        var fontTiny = Graphics.FONT_XTINY;
-
-        // Top: Metric tag + AVG + Zone pill
-        var topY = 4;
-        dc.setColor(subTextColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx - 32, topY + 2, fontTiny, metricLabel + " " + avgStr, Graphics.TEXT_JUSTIFY_RIGHT);
-
-        var badgeW = 48;
-        var badgeH = 18;
-        var badgeX = cx - 24;
-        if (!view.mFullBackgroundColor) {
-            dc.setColor(zoneColor, zoneColor);
-            dc.fillRoundedRectangle(badgeX, topY, badgeW, badgeH, 3);
-            var badgeTextCol = (zoneColor == Graphics.COLOR_YELLOW || zoneColor == Graphics.COLOR_LT_GRAY) ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
-            dc.setColor(badgeTextCol, Graphics.COLOR_TRANSPARENT);
-        } else {
-            dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawRoundedRectangle(badgeX, topY, badgeW, badgeH, 3);
-        }
-        dc.drawText(badgeX + (badgeW / 2), topY + (badgeH / 2) - (dc.getFontHeight(fontTiny) / 2) - 1, fontTiny, zoneBadgeStr, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Center: Primary Value
-        var valFont = (height > 90) ? Graphics.FONT_LARGE : Graphics.FONT_MEDIUM;
-        var valW = dc.getTextWidthInPixels(valueStr, valFont);
-        var unitW = dc.getTextWidthInPixels(unitStr, fontTiny);
-        var totalNumW = valW + 4 + unitW;
-        var startX = cx - (totalNumW / 2);
-        var valFontH = dc.getFontHeight(valFont);
-        var valY = (height / 2) - (valFontH / 2) - 2;
-
-        dc.setColor(fgColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX, valY, valFont, valueStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        var unitY = valY + valFontH - dc.getFontHeight(fontTiny) - 2;
-        var unitColor = (view.mFullBackgroundColor && activeIndex > 0) ? fgColor : zoneColor;
-        if (unitColor == Graphics.COLOR_LT_GRAY && !isDark) {
-            unitColor = subTextColor;
-        }
-        dc.setColor(unitColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(startX + valW + 4, unitY, fontTiny, unitStr, Graphics.TEXT_JUSTIFY_LEFT);
-
-        // Bottom: Horizontal Segmented Zone Bar
-        var barTotalW = (width * 0.60).toNumber();
-        var barX = cx - (barTotalW / 2);
-        var barY = height - 10;
-        var segW = (barTotalW / numZones).toNumber();
-
-        for (var z = 1; z <= numZones; z++) {
-            var bColor = view.mCalculator.getZoneColor(view.mMetricType, z);
-            var isActive = (activeIndex == z);
-            var curSegH = isActive ? 7 : 4;
-            var curSegY = isActive ? (barY - 3) : barY;
-            dc.setColor(bColor, bColor);
-            dc.fillRectangle(barX + ((z - 1) * segW), curSegY, segW - 2, curSegH);
-        }
+    // =============================================================
+    // Helper: Subtle Top Clock for Full Watch Screens
+    // =============================================================
+    private function drawTopClock(dc as Graphics.Dc, cx as Number, topY as Number) as Void {
+        try {
+            var clock = System.getClockTime();
+            var is24h = true;
+            var devSettings = System.getDeviceSettings();
+            if (devSettings has :is24Hour) {
+                is24h = devSettings.is24Hour;
+            }
+            var timeStr;
+            if (is24h) {
+                timeStr = Lang.format("$1$:$2$", [clock.hour.format("%02d"), clock.min.format("%02d")]);
+            } else {
+                var h = clock.hour;
+                var ampm = (h >= 12) ? "PM" : "AM";
+                h = h % 12;
+                if (h == 0) { h = 12; }
+                timeStr = Lang.format("$1$:$2$ $3$", [h, clock.min.format("%02d"), ampm]);
+            }
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, topY, Graphics.FONT_XTINY, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        } catch (e) {}
     }
 }
