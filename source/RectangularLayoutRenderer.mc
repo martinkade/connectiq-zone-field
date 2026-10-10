@@ -191,43 +191,57 @@ class RectangularLayoutRenderer {
 
         var badgeStr = (activeZone > 0) ? ("Z" + activeZone) : "--";
 
-        // Select optimal numeric font and badge font (stepped down for clean proportion)
-        var fontVal = Graphics.FONT_NUMBER_MEDIUM;
-        var fontBadge = Graphics.FONT_SMALL;
-        var gap = 8;
-        var padBadgeY = 3;
+        var maxAllowedW = screenWidth - 16;
 
-        if (availH < 50 || screenWidth < 140) {
-            fontVal = Graphics.FONT_LARGE;
-            fontBadge = Graphics.FONT_XTINY;
-            gap = 5;
-            padBadgeY = 2;
-        } else if (availH < 85 || screenWidth < 190) {
+        // Select optimal typography pairing based on availH (primary) and maxAllowedW
+        var fontVal;
+        var fontBadge;
+        var gap = 5;
+        var padBadgeY = 2;
+
+        if (availH >= 110 && maxAllowedW >= 220) {
+            fontVal = Graphics.FONT_NUMBER_MEDIUM;
+            fontBadge = Graphics.FONT_SMALL;
+            gap = 8;
+            padBadgeY = 3;
+        } else if (availH >= 75 && maxAllowedW >= 180) {
             fontVal = Graphics.FONT_NUMBER_MILD;
             fontBadge = Graphics.FONT_TINY;
             gap = 6;
             padBadgeY = 2;
+        } else if (availH >= 42 && maxAllowedW >= 120) {
+            fontVal = Graphics.FONT_LARGE;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 5;
+            padBadgeY = 2;
+        } else if (availH >= 30 && maxAllowedW >= 90) {
+            fontVal = Graphics.FONT_MEDIUM;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 4;
+            padBadgeY = 1;
+        } else if (availH >= 22 && maxAllowedW >= 70) {
+            fontVal = Graphics.FONT_SMALL;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 3;
+            padBadgeY = 1;
+        } else {
+            fontVal = Graphics.FONT_TINY;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 3;
+            padBadgeY = 1;
         }
 
-        // Measure value text width
         var valW = dc.getTextWidthInPixels(valueStr, fontVal);
-
-        // Measure badge text width & pill container dimensions
         var badgeTxtW = dc.getTextWidthInPixels(badgeStr, fontBadge);
         var badgeTxtH = dc.getFontHeight(fontBadge);
         var badgeBoxH = badgeTxtH + (2 * padBadgeY);
         var padBadgeX = (badgeBoxH * 0.42).toNumber();
-        if (padBadgeX < 7) {
-            padBadgeX = 7;
-        }
+        if (padBadgeX < 5) { padBadgeX = 5; }
         var badgeBoxW = badgeTxtW + (2 * padBadgeX);
-        if (badgeBoxW < badgeBoxH) {
-            badgeBoxW = badgeBoxH;
-        }
-
-        // Check if group fits; if not, step down fonts
+        if (badgeBoxW < badgeBoxH) { badgeBoxW = badgeBoxH; }
         var groupW = valW + gap + badgeBoxW;
-        var maxAllowedW = screenWidth - 16;
+
+        // If total width exceeds maxAllowedW, step down to smaller font
         if (groupW > maxAllowedW) {
             if (fontVal == Graphics.FONT_NUMBER_MEDIUM) {
                 fontVal = Graphics.FONT_NUMBER_MILD;
@@ -237,20 +251,17 @@ class RectangularLayoutRenderer {
                 fontBadge = Graphics.FONT_XTINY;
             } else if (fontVal == Graphics.FONT_LARGE) {
                 fontVal = Graphics.FONT_MEDIUM;
-                fontBadge = Graphics.FONT_XTINY;
+            } else if (fontVal == Graphics.FONT_MEDIUM) {
+                fontVal = Graphics.FONT_SMALL;
             }
             valW = dc.getTextWidthInPixels(valueStr, fontVal);
             badgeTxtW = dc.getTextWidthInPixels(badgeStr, fontBadge);
             badgeTxtH = dc.getFontHeight(fontBadge);
             badgeBoxH = badgeTxtH + (2 * padBadgeY);
             padBadgeX = (badgeBoxH * 0.42).toNumber();
-            if (padBadgeX < 6) {
-                padBadgeX = 6;
-            }
+            if (padBadgeX < 5) { padBadgeX = 5; }
             badgeBoxW = badgeTxtW + (2 * padBadgeX);
-            if (badgeBoxW < badgeBoxH) {
-                badgeBoxW = badgeBoxH;
-            }
+            if (badgeBoxW < badgeBoxH) { badgeBoxW = badgeBoxH; }
             groupW = valW + gap + badgeBoxW;
         }
 

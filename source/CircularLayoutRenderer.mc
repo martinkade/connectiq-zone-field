@@ -29,7 +29,7 @@ class CircularLayoutRenderer {
 
     // =============================================================
     // 1. Top Dome Screen (Upper Half of Watch Face: OBSCURE_TOP)
-    // Dynamic adaptation: Pin arc stacked bar to the top bezel,
+    // Dynamic adaptation: Pin arc stacked bar to the top bezel curve,
     // active segment radially thicker, indicator below it, hero value below.
     // =============================================================
     private function renderTopDome(
@@ -38,22 +38,68 @@ class CircularLayoutRenderer {
         width as Number,
         height as Number
     ) as Void {
+        var screenW = width;
+        try {
+            var devSettings = System.getDeviceSettings();
+            if (devSettings has :screenWidth && devSettings.screenWidth != null) {
+                screenW = devSettings.screenWidth;
+            }
+        } catch (e) {}
+        if (screenW < width) {
+            screenW = width;
+        }
+
+        var R = (screenW / 2).toNumber();
         var cx = width / 2;
-        var cy = height; // circle center is at bottom chord
-        var radius = width / 2;
+        var cy = R; // Center of circular display: y = 0 is display top apex
         var activeZone = view.mZoneResult.zoneIndex;
         var numZones = (view.mMetricType == 1) ? 7 : 5;
 
-        // Top arc spans 120 degrees: 150 deg (left) clockwise to 30 deg (right)
-        var totalAngle = 120;
-        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, 12);
-
-        var arcR = radius - 8;
+        // Adaptive arc radius, stroke width, and pip sizes based on field height
+        var arcR = R - 8;
         var penInactive = 8;
         var penActive = 14;
+        var pipRadiusOuter = 5;
+        var pipRadiusInner = 2;
 
-        var curAngle = 150;
-        var actStartAngle = 150;
+        if (height < 90) {
+            penInactive = 5;
+            penActive = 8;
+            pipRadiusOuter = 3;
+            pipRadiusInner = 1;
+            arcR = R - 6;
+        } else if (height < 140) {
+            penInactive = 6;
+            penActive = 10;
+            pipRadiusOuter = 4;
+            pipRadiusInner = 2;
+            arcR = R - 7;
+        }
+
+        // Calculate arc angle limits so endpoints remain gracefully inside the field
+        var yMaxArc = height - 10;
+        if (yMaxArc < 15) {
+            yMaxArc = 15;
+        }
+        var sinMin = (R - yMaxArc).toFloat() / arcR.toFloat();
+        if (sinMin < 0.5f) { sinMin = 0.5f; } // max 120° span (150° to 30°)
+        if (sinMin > 0.95f) { sinMin = 0.95f; }
+
+        var endAngle = 30;
+        try {
+            endAngle = Math.toDegrees(Math.asin(sinMin)).toNumber();
+        } catch (e) {
+            endAngle = 30;
+        }
+        if (endAngle < 30) { endAngle = 30; }
+        if (endAngle > 75) { endAngle = 75; }
+
+        var startAngle = 180 - endAngle;
+        var totalAngle = startAngle - endAngle;
+        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, (height < 90) ? 8 : 12);
+
+        var curAngle = startAngle;
+        var actStartAngle = startAngle;
         var actSpanAngle = 0;
 
         // 1. Draw Pinned Top Arc Stacked Bar
@@ -65,7 +111,7 @@ class CircularLayoutRenderer {
             }
 
             var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
-            var endAngle = curAngle - span;
+            var nextAngle = curAngle - span;
             var isAct = (zNum == activeZone);
 
             if (isAct) {
@@ -80,39 +126,47 @@ class CircularLayoutRenderer {
             }
 
             dc.setColor(segCol, segCol);
-            dc.drawArc(cx, cy, arcR, Graphics.ARC_CLOCKWISE, curAngle, endAngle);
+            dc.drawArc(cx, cy, arcR, Graphics.ARC_CLOCKWISE, curAngle, nextAngle);
 
-            curAngle = endAngle;
+            curAngle = nextAngle;
         }
 
-        // 2. Indicator Pip/Caret along the active arc segment
+        // 2. Indicator Pip along the active arc segment
         var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
         if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actSpanAngle > 0) {
             var progress = view.mZoneResult.zoneProgress;
             var indAngle = actStartAngle.toFloat() - (progress * actSpanAngle.toFloat());
             var indRad = Math.toRadians(indAngle);
 
-            // Pip position on the inner edge of the active arc
-            var pipR = arcR - (penActive / 2) - 4;
+            var pipOffset = (penActive / 2) + ((height < 90) ? 3 : 4);
+            var pipR = arcR - pipOffset;
             var pipX = cx + (pipR.toFloat() * Math.cos(indRad)).toNumber();
             var pipY = cy - (pipR.toFloat() * Math.sin(indRad)).toNumber();
 
             var pipCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : view.mZoneResult.color;
             dc.setColor(pipCol, pipCol);
-            dc.fillCircle(pipX, pipY, 5);
+            dc.fillCircle(pipX, pipY, pipRadiusOuter);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillCircle(pipX, pipY, 2);
+            dc.fillCircle(pipX, pipY, pipRadiusInner);
         }
 
-        // 3. Hero Value + Inline Active Zone Badge (positioned below the arc)
-        var heroCenterY = (height * 0.58).toNumber();
-        var maxW = (width * 0.85).toNumber();
-        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
+        // Reset pen width
+        dc.setPenWidth(1);
+
+        // 3. Hero Value + Inline Active Zone Badge
+        var topUsed = (R - arcR) + (penActive / 2) + ((height < 90) ? 6 : 10);
+        var availHeroH = height - topUsed - 3;
+        if (availHeroH < 18) {
+            availHeroH = 18;
+        }
+        var heroCenterY = topUsed + (availHeroH / 2);
+        var maxW = (width * 0.82).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW, availHeroH);
     }
 
     // =============================================================
     // 2. Bottom Bowl Screen (Lower Half of Watch Face: OBSCURE_BOTTOM)
-    // Dynamic adaptation: Pin arc stacked bar to the bottom bezel,
+    // Dynamic adaptation: Pin arc stacked bar to the bottom bezel curve,
     // active segment radially thicker, indicator above it, hero value above.
     // =============================================================
     private function renderBottomBowl(
@@ -121,22 +175,66 @@ class CircularLayoutRenderer {
         width as Number,
         height as Number
     ) as Void {
+        var screenW = width;
+        try {
+            var devSettings = System.getDeviceSettings();
+            if (devSettings has :screenWidth && devSettings.screenWidth != null) {
+                screenW = devSettings.screenWidth;
+            }
+        } catch (e) {}
+        if (screenW < width) {
+            screenW = width;
+        }
+
+        var R = (screenW / 2).toNumber();
         var cx = width / 2;
-        var cy = 0; // circle center is at flat top chord
-        var radius = width / 2;
+        var cy = height - R; // Center of circular display: y = height is display bottom apex
         var activeZone = view.mZoneResult.zoneIndex;
         var numZones = (view.mMetricType == 1) ? 7 : 5;
 
-        // Bottom arc spans 120 degrees: 210 deg (left) counter-clockwise to 330 deg (right)
-        var totalAngle = 120;
-        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, 12);
-
-        var arcR = radius - 8;
+        // Adaptive arc radius, stroke width, and pip sizes based on field height
+        var arcR = R - 8;
         var penInactive = 8;
         var penActive = 14;
+        var pipRadiusOuter = 5;
+        var pipRadiusInner = 2;
 
-        var curAngle = 210;
-        var actStartAngle = 210;
+        if (height < 90) {
+            penInactive = 5;
+            penActive = 8;
+            pipRadiusOuter = 3;
+            pipRadiusInner = 1;
+            arcR = R - 6;
+        } else if (height < 140) {
+            penInactive = 6;
+            penActive = 10;
+            pipRadiusOuter = 4;
+            pipRadiusInner = 2;
+            arcR = R - 7;
+        }
+
+        // Calculate arc angle limits so endpoints remain gracefully inside the field
+        var yMinArc = 10;
+        var sinMin = (R - height + yMinArc).toFloat() / arcR.toFloat();
+        if (sinMin < 0.5f) { sinMin = 0.5f; } // max 120° span (210° to 330°)
+        if (sinMin > 0.95f) { sinMin = 0.95f; }
+
+        var angleOffset = 30;
+        try {
+            angleOffset = Math.toDegrees(Math.asin(sinMin)).toNumber();
+        } catch (e) {
+            angleOffset = 30;
+        }
+        if (angleOffset < 30) { angleOffset = 30; }
+        if (angleOffset > 75) { angleOffset = 75; }
+
+        var startAngle = 180 + angleOffset;
+        var endAngle = 360 - angleOffset;
+        var totalAngle = endAngle - startAngle;
+        var segAngles = view.mStats.computeSegmentWidths(totalAngle, activeZone, (height < 90) ? 8 : 12);
+
+        var curAngle = startAngle;
+        var actStartAngle = startAngle;
         var actSpanAngle = 0;
 
         // 1. Draw Pinned Bottom Arc Stacked Bar
@@ -148,7 +246,7 @@ class CircularLayoutRenderer {
             }
 
             var segCol = view.mCalculator.getZoneColor(view.mMetricType, zNum);
-            var endAngle = curAngle + span;
+            var nextAngle = curAngle + span;
             var isAct = (zNum == activeZone);
 
             if (isAct) {
@@ -163,34 +261,42 @@ class CircularLayoutRenderer {
             }
 
             dc.setColor(segCol, segCol);
-            dc.drawArc(cx, cy, arcR, Graphics.ARC_COUNTER_CLOCKWISE, curAngle, endAngle);
+            dc.drawArc(cx, cy, arcR, Graphics.ARC_COUNTER_CLOCKWISE, curAngle, nextAngle);
 
-            curAngle = endAngle;
+            curAngle = nextAngle;
         }
 
-        // 2. Indicator Pip/Caret along the active arc segment
+        // 2. Indicator Pip along the active arc segment
         var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
         if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actSpanAngle > 0) {
             var progress = view.mZoneResult.zoneProgress;
             var indAngle = actStartAngle.toFloat() + (progress * actSpanAngle.toFloat());
             var indRad = Math.toRadians(indAngle);
 
-            // Pip position on the upper/inner edge of the bottom arc
-            var pipR = arcR - (penActive / 2) - 4;
+            var pipOffset = (penActive / 2) + ((height < 90) ? 3 : 4);
+            var pipR = arcR - pipOffset;
             var pipX = cx + (pipR.toFloat() * Math.cos(indRad)).toNumber();
             var pipY = cy - (pipR.toFloat() * Math.sin(indRad)).toNumber();
 
             var pipCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : view.mZoneResult.color;
             dc.setColor(pipCol, pipCol);
-            dc.fillCircle(pipX, pipY, 5);
+            dc.fillCircle(pipX, pipY, pipRadiusOuter);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-            dc.fillCircle(pipX, pipY, 2);
+            dc.fillCircle(pipX, pipY, pipRadiusInner);
         }
 
-        // 3. Hero Value + Inline Active Zone Badge (positioned above the bottom arc)
-        var heroCenterY = (height * 0.38).toNumber();
-        var maxW = (width * 0.85).toNumber();
-        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
+        // Reset pen width
+        dc.setPenWidth(1);
+
+        // 3. Hero Value + Inline Active Zone Badge
+        var bottomUsed = (R - arcR) + (penActive / 2) + ((height < 90) ? 6 : 10);
+        var availHeroH = height - bottomUsed - 3;
+        if (availHeroH < 18) {
+            availHeroH = 18;
+        }
+        var heroCenterY = 3 + (availHeroH / 2);
+        var maxW = (width * 0.82).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW, availHeroH);
     }
 
     // =============================================================
@@ -269,14 +375,18 @@ class CircularLayoutRenderer {
             dc.fillCircle(pipX, pipY, 2);
         }
 
+        // Reset pen width
+        dc.setPenWidth(1);
+
         // Hero Value + Inline Active Zone Badge (Hero centered prominently)
         var heroCenterY = cy - 4;
         var maxW = (width * 0.85).toNumber();
-        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW);
+        var availH = (height * 0.52).toNumber();
+        drawHeroValueAndBadge(dc, view, cx, heroCenterY, maxW, availH);
     }
 
     // =============================================================
-    // 4. Middle Band Screen (Multi-field horizontal slice)
+    // 4. Middle Band Screen (Multi-field horizontal slice / Center Strip)
     // =============================================================
     private function renderMiddleBand(
         dc as Graphics.Dc,
@@ -289,19 +399,18 @@ class CircularLayoutRenderer {
         var numZones = (view.mMetricType == 1) ? 7 : 5;
 
         // In middle band, width has horizontal borders
-        var padLeft = 10;
-        var padRight = 10;
-        var barW = width - padLeft - padRight;
-        var barBottomY = height - 3;
-        var baseBarH = (height > 90) ? 8 : 6;
-        var activeBarH = baseBarH + 4;
-        var minActiveW = 16;
+        var padSide = (width > 250) ? 12 : 8;
+        var barW = width - (2 * padSide);
+        var barBottomY = height - 2;
+        var baseBarH = (height > 90) ? 8 : ((height > 60) ? 6 : 4);
+        var activeBarH = baseBarH + ((height > 60) ? 3 : 2);
+        var minActiveW = (width > 250) ? 16 : 10;
 
         var segmentWidths = view.mStats.computeSegmentWidths(barW, activeZone, minActiveW);
 
         // 1. Bottom Stacked Bar
-        var curX = padLeft;
-        var actStartX = padLeft;
+        var curX = padSide;
+        var actStartX = padSide;
         var actW = 0;
 
         for (var i = 0; i < numZones; i++) {
@@ -332,8 +441,8 @@ class CircularLayoutRenderer {
 
         // 2. Position Indicator Caret
         var hasValidSignal = (view.mCurrentValue != null && view.mCurrentValue > 0);
-        var triH = 4;
-        var triHalfW = 3;
+        var triH = (height < 60) ? 3 : 4;
+        var triHalfW = (height < 60) ? 2 : 3;
         var indBottomY = barBottomY - activeBarH - 2;
 
         if (hasValidSignal && activeZone >= 1 && activeZone <= numZones && actW > 0) {
@@ -357,20 +466,26 @@ class CircularLayoutRenderer {
         }
 
         // 3. Hero Value + Inline Badge
-        var heroAvailH = indBottomY - triH - 4;
+        var heroAvailH = indBottomY - triH - 3;
+        if (heroAvailH < 18) {
+            heroAvailH = 18;
+        }
         var heroCenterY = 2 + (heroAvailH / 2);
-        drawHeroValueAndBadge(dc, view, width / 2, heroCenterY, barW);
+        var maxAllowedW = barW - 6;
+        drawHeroValueAndBadge(dc, view, width / 2, heroCenterY, maxAllowedW, heroAvailH);
     }
 
     // =============================================================
-    // Helper: Draw Hero Value (large, no unit) + Inline Active Zone Badge
+    // Helper: Draw Hero Value (no unit) + Inline Active Zone Badge
+    // Sized dynamically with FIELD HEIGHT AS PRIMARY PRIORITY
     // =============================================================
     private function drawHeroValueAndBadge(
         dc as Graphics.Dc,
         view as ZoneFieldView,
         centerX as Number,
         centerY as Number,
-        maxAllowedW as Number
+        maxAllowedW as Number,
+        availH as Number
     ) as Void {
         var isDark = view.isDarkTheme();
         var zoneColor = view.mZoneResult.color;
@@ -384,22 +499,42 @@ class CircularLayoutRenderer {
 
         var badgeStr = (activeZone > 0) ? ("Z" + activeZone) : "--";
 
-        // Select optimal numeric font and badge font (stepped down for clean proportion)
-        var fontVal = Graphics.FONT_NUMBER_MEDIUM;
-        var fontBadge = Graphics.FONT_SMALL;
-        var gap = 8;
-        var padBadgeY = 3;
+        // Select optimal typography pairing based on availH (primary) and maxAllowedW
+        var fontVal;
+        var fontBadge;
+        var gap = 5;
+        var padBadgeY = 2;
 
-        if (maxAllowedW < 180) {
-            fontVal = Graphics.FONT_LARGE;
-            fontBadge = Graphics.FONT_XTINY;
-            gap = 5;
-            padBadgeY = 2;
-        } else if (maxAllowedW < 230) {
+        if (availH >= 110 && maxAllowedW >= 220) {
+            fontVal = Graphics.FONT_NUMBER_MEDIUM;
+            fontBadge = Graphics.FONT_SMALL;
+            gap = 8;
+            padBadgeY = 3;
+        } else if (availH >= 75 && maxAllowedW >= 180) {
             fontVal = Graphics.FONT_NUMBER_MILD;
             fontBadge = Graphics.FONT_TINY;
             gap = 6;
             padBadgeY = 2;
+        } else if (availH >= 42 && maxAllowedW >= 120) {
+            fontVal = Graphics.FONT_LARGE;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 5;
+            padBadgeY = 2;
+        } else if (availH >= 30 && maxAllowedW >= 90) {
+            fontVal = Graphics.FONT_MEDIUM;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 4;
+            padBadgeY = 1;
+        } else if (availH >= 22 && maxAllowedW >= 70) {
+            fontVal = Graphics.FONT_SMALL;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 3;
+            padBadgeY = 1;
+        } else {
+            fontVal = Graphics.FONT_TINY;
+            fontBadge = Graphics.FONT_XTINY;
+            gap = 3;
+            padBadgeY = 1;
         }
 
         var valW = dc.getTextWidthInPixels(valueStr, fontVal);
@@ -407,15 +542,12 @@ class CircularLayoutRenderer {
         var badgeTxtH = dc.getFontHeight(fontBadge);
         var badgeBoxH = badgeTxtH + (2 * padBadgeY);
         var padBadgeX = (badgeBoxH * 0.42).toNumber();
-        if (padBadgeX < 7) {
-            padBadgeX = 7;
-        }
+        if (padBadgeX < 5) { padBadgeX = 5; }
         var badgeBoxW = badgeTxtW + (2 * padBadgeX);
-        if (badgeBoxW < badgeBoxH) {
-            badgeBoxW = badgeBoxH;
-        }
+        if (badgeBoxW < badgeBoxH) { badgeBoxW = badgeBoxH; }
         var groupW = valW + gap + badgeBoxW;
 
+        // If total width exceeds maxAllowedW, step down to smaller font
         if (groupW > maxAllowedW) {
             if (fontVal == Graphics.FONT_NUMBER_MEDIUM) {
                 fontVal = Graphics.FONT_NUMBER_MILD;
@@ -423,19 +555,19 @@ class CircularLayoutRenderer {
             } else if (fontVal == Graphics.FONT_NUMBER_MILD) {
                 fontVal = Graphics.FONT_LARGE;
                 fontBadge = Graphics.FONT_XTINY;
+            } else if (fontVal == Graphics.FONT_LARGE) {
+                fontVal = Graphics.FONT_MEDIUM;
+            } else if (fontVal == Graphics.FONT_MEDIUM) {
+                fontVal = Graphics.FONT_SMALL;
             }
             valW = dc.getTextWidthInPixels(valueStr, fontVal);
             badgeTxtW = dc.getTextWidthInPixels(badgeStr, fontBadge);
             badgeTxtH = dc.getFontHeight(fontBadge);
             badgeBoxH = badgeTxtH + (2 * padBadgeY);
             padBadgeX = (badgeBoxH * 0.42).toNumber();
-            if (padBadgeX < 6) {
-                padBadgeX = 6;
-            }
+            if (padBadgeX < 5) { padBadgeX = 5; }
             badgeBoxW = badgeTxtW + (2 * padBadgeX);
-            if (badgeBoxW < badgeBoxH) {
-                badgeBoxW = badgeBoxH;
-            }
+            if (badgeBoxW < badgeBoxH) { badgeBoxW = badgeBoxH; }
             groupW = valW + gap + badgeBoxW;
         }
 
