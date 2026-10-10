@@ -321,12 +321,6 @@ class CircularLayoutRenderer {
                 var actCol = (view.mFullBackgroundColor && activeZone > 0) ? Graphics.COLOR_WHITE : segCol;
                 dc.setColor(actCol, actCol);
                 dc.fillRectangle(curX, segY, segW, activeBarH);
-
-                var borderCol = (view.mFullBackgroundColor && activeZone > 0)
-                    ? Graphics.COLOR_DK_GRAY
-                    : (isDark ? Graphics.COLOR_WHITE : Graphics.COLOR_BLACK);
-                dc.setColor(borderCol, Graphics.COLOR_TRANSPARENT);
-                dc.drawRectangle(curX, segY, segW, activeBarH);
             } else {
                 var segY = barBottomY - baseBarH;
                 dc.setColor(segCol, segCol);
@@ -459,25 +453,26 @@ class CircularLayoutRenderer {
 
         // Draw Badge as a smooth pill (corner radius = half height)
         var pillRadius = (badgeBoxH / 2).toNumber();
-        var bFill;
-        var bTextCol;
+        var badgeTextY = badgeY + ((badgeBoxH - badgeTxtH) / 2) - 1;
 
         if (view.mFullBackgroundColor && activeZone > 0) {
-            bFill = Graphics.COLOR_WHITE;
-            bTextCol = Graphics.COLOR_BLACK;
+            // Full background mode: do not fill badge, draw white border with white text
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(1);
+            dc.drawRoundedRectangle(badgeX, badgeY, badgeBoxW, badgeBoxH, pillRadius);
+            dc.drawText(badgeX + (badgeBoxW / 2), badgeTextY, fontBadge, badgeStr, Graphics.TEXT_JUSTIFY_CENTER);
         } else {
-            bFill = (activeZone > 0) ? zoneColor : Graphics.COLOR_DK_GRAY;
-            bTextCol = (bFill == Graphics.COLOR_YELLOW || bFill == Graphics.COLOR_LT_GRAY)
+            var bFill = (activeZone > 0) ? zoneColor : Graphics.COLOR_DK_GRAY;
+            var bTextCol = (bFill == Graphics.COLOR_YELLOW || bFill == Graphics.COLOR_LT_GRAY)
                 ? Graphics.COLOR_BLACK
                 : Graphics.COLOR_WHITE;
+
+            dc.setColor(bFill, bFill);
+            dc.fillRoundedRectangle(badgeX, badgeY, badgeBoxW, badgeBoxH, pillRadius);
+
+            dc.setColor(bTextCol, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(badgeX + (badgeBoxW / 2), badgeTextY, fontBadge, badgeStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
-
-        dc.setColor(bFill, bFill);
-        dc.fillRoundedRectangle(badgeX, badgeY, badgeBoxW, badgeBoxH, pillRadius);
-
-        dc.setColor(bTextCol, Graphics.COLOR_TRANSPARENT);
-        var badgeTextY = badgeY + ((badgeBoxH - badgeTxtH) / 2) - 1;
-        dc.drawText(badgeX + (badgeBoxW / 2), badgeTextY, fontBadge, badgeStr, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     // =============================================================
