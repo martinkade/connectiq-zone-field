@@ -4,6 +4,7 @@ import Toybox.Graphics;
 import Toybox.UserProfile;
 import Toybox.Lang;
 import Toybox.System;
+import Toybox.Time;
 
 class ZoneResult {
     public var zoneIndex as Number = 0;
@@ -21,6 +22,7 @@ class ZoneCalculator {
     private var mFtp as Number = 250;
     private var mHrZones as Array<Number>? = null;
     private var mMaxHr as Number = 190;
+    private var mRestHr as Number = 60;
     private var mPowerZones as Array<Number>? = null;
 
     function initialize(ftp as Number) {
@@ -36,6 +38,10 @@ class ZoneCalculator {
 
     public function getMaxHeartRate() as Number {
         return mMaxHr;
+    }
+
+    public function getRestingHeartRate() as Number {
+        return mRestHr;
     }
 
     public function getFtp() as Number {
@@ -57,6 +63,18 @@ class ZoneCalculator {
             if (zones != null && zones.size() >= 5) {
                 mHrZones = zones;
                 mMaxHr = zones[zones.size() - 1];
+
+                // Cache resting heart rate from profile if available
+                try {
+                    var profile = UserProfile.getProfile();
+                    if (profile != null) {
+                        if (profile has :restingHeartRate && profile.restingHeartRate != null && profile.restingHeartRate > 0) {
+                            mRestHr = profile.restingHeartRate;
+                        } else if (profile has :averageRestingHeartRate && profile.averageRestingHeartRate != null && profile.averageRestingHeartRate > 0) {
+                            mRestHr = profile.averageRestingHeartRate;
+                        }
+                    }
+                } catch (pe) {}
             } else {
                 fallbackHrZones();
             }
@@ -66,28 +84,59 @@ class ZoneCalculator {
     }
 
     private function fallbackHrZones() as Void {
-        // Fallback using standard age-based max HR formula: 220 - age
+        // Fallback using the Karvonen model (Heart Rate Reserve):
+        // Accounts for Resting Heart Rate (HR_rest) using Heart Rate Reserve (HRR = HR_max - HR_rest).
+        // Target HR = HR_rest + (Intensity % * [HR_max - HR_rest])
+        // Zone 1: 50% - 60% intensity (restHr + 0.50 * HRR to restHr + 0.60 * HRR)
+        // Zone 2: 60% - 70% intensity (restHr + 0.60 * HRR to restHr + 0.70 * HRR)
+        // Zone 3: 70% - 80% intensity (restHr + 0.70 * HRR to restHr + 0.80 * HRR)
+        // Zone 4: 80% - 90% intensity (restHr + 0.80 * HRR to restHr + 0.90 * HRR)
+        // Zone 5: 90% - 100% intensity (restHr + 0.90 * HRR to HR_max)
         var maxHr = 190;
+        var restHr = 60;
         try {
             var profile = UserProfile.getProfile();
-            if (profile != null && profile.birthYear != null) {
-                // Estimate age (default roughly 30 if unavailable)
-                var currentYear = 2026;
-                var age = currentYear - profile.birthYear;
-                if (age > 10 && age < 100) {
-                    maxHr = 220 - age;
+            if (profile != null) {
+                if (profile has :restingHeartRate && profile.restingHeartRate != null && profile.restingHeartRate > 0) {
+                    restHr = profile.restingHeartRate;
+                } else if (profile has :averageRestingHeartRate && profile.averageRestingHeartRate != null && profile.averageRestingHeartRate > 0) {
+                    restHr = profile.averageRestingHeartRate;
+                }
+
+                if (profile.birthYear != null) {
+                    var currentYear = 2026;
+                    try {
+                        var now = Time.now();
+                        var clockInfo = Time.Gregorian.info(now, Time.FORMAT_SHORT);
+                        if (clockInfo != null && clockInfo.year != null && clockInfo.year > 2020) {
+                            currentYear = clockInfo.year;
+                        }
+                    } catch (timeEx) {}
+
+                    var age = currentYear - profile.birthYear;
+                    if (age > 10 && age < 100) {
+                        maxHr = 220 - age;
+                    }
                 }
             }
         } catch (e) {}
 
+        // Ensure resting HR is reasonable relative to max HR to prevent negative or zero HRR
+        if (restHr >= maxHr || (maxHr - restHr) < 20) {
+            restHr = (maxHr > 80) ? 60 : (maxHr * 0.35).toNumber();
+        }
+
         mMaxHr = maxHr;
-        // Standard 5-zone HR bounds (50%, 60%, 70%, 80%, 90%, 100%)
+        mRestHr = restHr;
+        var hrr = maxHr - restHr;
+
+        // Karvonen 5-zone HR bounds (50%, 60%, 70%, 80%, 90%, 100% of HRR)
         mHrZones = [
-            (maxHr * 0.50).toNumber(),
-            (maxHr * 0.60).toNumber(),
-            (maxHr * 0.70).toNumber(),
-            (maxHr * 0.80).toNumber(),
-            (maxHr * 0.90).toNumber(),
+            (restHr + (hrr * 0.50) + 0.5f).toNumber(),
+            (restHr + (hrr * 0.60) + 0.5f).toNumber(),
+            (restHr + (hrr * 0.70) + 0.5f).toNumber(),
+            (restHr + (hrr * 0.80) + 0.5f).toNumber(),
+            (restHr + (hrr * 0.90) + 0.5f).toNumber(),
             maxHr
         ];
     }

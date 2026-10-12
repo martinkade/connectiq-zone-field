@@ -50,9 +50,13 @@ Designed to adapt seamlessly across **Garmin Edge bike computers** (rectangular 
 ## Training Zone Models
 
 ### Heart Rate Zones (5-Zone Model)
-*Sourced dynamically from Garmin Connect profile via `Toybox.UserProfile.getHeartRateZones()`:*
+*Sourced dynamically from Garmin Connect profile via `Toybox.UserProfile.getHeartRateZones()`.*
 
-| Zone | Name | Typical % Max HR | Color |
+When profile-configured zones are unavailable, ZoneField employs the **Karvonen Model** (Heart Rate Reserve) as an intelligent fallback. By accounting for your Resting Heart Rate ($HR_{rest}$) via Heart Rate Reserve ($HRR = HR_{max} - HR_{rest}$), it produces a far more accurate physiological floor for active recovery and aerobic base zones:
+
+$$\text{Target HR} = HR_{rest} + (\text{Intensity \%} \times [HR_{max} - HR_{rest}])$$
+
+| Zone | Name | Intensity (% HRR / % Max HR) | Color |
 | :---: | :--- | :---: | :--- |
 | **Z0** | Warm-Up / Below Zone 1 | $< 50\%$ | Light Gray |
 | **Z1** | Warm Up / Active Recovery | $50\% - 59\%$ | Dark Gray |
